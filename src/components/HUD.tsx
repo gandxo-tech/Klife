@@ -9,6 +9,7 @@ import { calculateDistance, formatFCFA } from '../game/rules.ts';
 import { Minimap } from './Minimap.tsx';
 import { VirtualJoystick } from './VirtualJoystick.tsx';
 import { sound } from '../game/audio.ts';
+import { useFullscreen } from '../hooks/useFullscreen.ts';
 import {
   Volume2,
   VolumeX,
@@ -27,6 +28,8 @@ import {
   Swords,
   HelpCircle,
   X,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 
 interface HUDProps {
@@ -71,6 +74,7 @@ export const HUD: React.FC<HUDProps> = ({
   const [isPortrait, setIsPortrait] = useState(false);
   const [dismissPortraitWarning, setDismissPortraitWarning] = useState(false);
   const [showKeyHelp, setShowKeyHelp] = useState(false);
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   // Detect orientation for Android landscape guidance
   useEffect(() => {
@@ -105,7 +109,7 @@ export const HUD: React.FC<HUDProps> = ({
   });
 
   return (
-    <div className="absolute inset-0 pointer-events-none select-none overflow-hidden font-sans">
+    <div className="absolute inset-0 pointer-events-none select-none overflow-hidden font-sans p-[env(safe-area-inset-top,12px)] pr-[env(safe-area-inset-right,12px)] pb-[env(safe-area-inset-bottom,12px)] pl-[env(safe-area-inset-left,12px)]">
       {/* 0. PORTRAIT WARNING FOR ANDROID USERS */}
       {isPortrait && !dismissPortraitWarning && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[92vw] max-w-sm bg-amber-500/95 text-slate-950 px-3 py-2 rounded-xl shadow-2xl flex items-center justify-between pointer-events-auto z-50 text-xs font-semibold backdrop-blur border border-amber-300">
@@ -148,6 +152,15 @@ export const HUD: React.FC<HUDProps> = ({
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Missions</span>
+          </button>
+
+          <button
+            onClick={toggleFullscreen}
+            className="p-1.5 hover:bg-slate-800 rounded-lg text-indigo-300 hover:text-white transition"
+            title={isFullscreen ? 'Quitter le plein écran' : 'Activer le mode plein écran'}
+            aria-label="Mode Plein Écran"
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4 text-indigo-400" /> : <Maximize2 className="w-4 h-4 text-indigo-400" />}
           </button>
 
           <button

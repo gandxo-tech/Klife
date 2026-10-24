@@ -1,6 +1,8 @@
 import React from 'react';
 import { MISSIONS } from '../game/missions.ts';
-import { Play, Sparkles, Volume2, ShieldCheck, HelpCircle, Compass } from 'lucide-react';
+import { Play, Sparkles, ShieldCheck, HelpCircle, Compass, Maximize2, Minimize2, Smartphone } from 'lucide-react';
+import { useFullscreen } from '../hooks/useFullscreen.ts';
+import { PWAInstallButton } from './PWAInstallButton.tsx';
 
 interface TitleScreenProps {
   onStartGame: () => void;
@@ -15,23 +17,48 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
   onOpenHowToPlay,
   onOpenMap,
 }) => {
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
+
   return (
-    <div className="absolute inset-0 z-30 flex flex-col justify-between p-6 md:p-12 pointer-events-none select-none font-sans">
-      {/* Top Header: Badge & Status */}
-      <div className="flex items-center justify-between pointer-events-auto">
-        <div className="flex items-center gap-2 bg-slate-950/80 border border-amber-500/50 rounded-full px-3.5 py-1 text-xs font-semibold text-amber-300 shadow">
-          <ShieldCheck className="w-4 h-4 text-amber-400" />
-          <span>ÉDITION BÉNIN · MONDE OUVERT 3D</span>
+    <div className="absolute inset-0 z-30 flex flex-col justify-between p-4 md:p-12 pointer-events-none select-none font-sans overflow-hidden">
+      {/* Top Header: Badge, Fullscreen & Status */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pointer-events-auto z-10">
+        <div className="flex items-center gap-2 bg-slate-950/80 border border-amber-500/50 rounded-full px-3.5 py-1 text-xs font-semibold text-amber-300 shadow backdrop-blur">
+          <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+          <span className="truncate">ÉDITION BÉNIN · MONDE OUVERT 3D</span>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* PWA Installation Button */}
+          <PWAInstallButton />
+
+          {/* Fullscreen Button for Android Mobile */}
+          <button
+            onClick={toggleFullscreen}
+            className="flex items-center gap-1.5 bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-500/80 text-indigo-200 hover:text-white rounded-full px-3.5 py-1 text-xs font-bold transition shadow active:scale-95"
+            title="Activer/Désactiver le mode plein écran"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Quitter Plein Écran</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5 text-indigo-400" />
+                <span>📱 Plein Écran Android</span>
+              </>
+            )}
+          </button>
+
           {onOpenMap && (
             <button
               onClick={onOpenMap}
               className="flex items-center gap-1.5 bg-sky-950/80 hover:bg-sky-900/90 border border-sky-500/80 rounded-full px-3.5 py-1 text-xs text-sky-200 hover:text-white transition shadow"
             >
               <Compass className="w-3.5 h-3.5 text-sky-400" />
-              <span>Carte OpenFreeMap</span>
+              <span className="hidden sm:inline">Carte OpenFreeMap</span>
+              <span className="sm:hidden">GPS</span>
             </button>
           )}
 
@@ -40,13 +67,13 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
             className="flex items-center gap-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 rounded-full px-3 py-1 text-xs text-slate-300 hover:text-white transition shadow"
           >
             <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
-            <span>Commandes</span>
+            <span className="hidden sm:inline">Commandes</span>
           </button>
         </div>
       </div>
 
       {/* Centerpiece: Bespoke SVG Title Lockup */}
-      <div className="flex flex-col items-center justify-center my-auto pointer-events-auto text-center max-w-2xl mx-auto">
+      <div className="flex flex-col items-center justify-center my-auto pointer-events-auto text-center max-w-2xl mx-auto py-2">
         {/* Inline SVG Title Lockup */}
         <div className="w-full max-w-lg mb-2 drop-shadow-[0_10px_25px_rgba(0,0,0,0.8)]">
           <svg viewBox="0 0 500 120" className="w-full h-auto">
@@ -94,27 +121,35 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
           </svg>
         </div>
 
-        <p className="text-sm md:text-base text-slate-200 font-medium max-w-lg bg-slate-950/75 border border-slate-800 rounded-xl px-4 py-2 mb-6 backdrop-blur-none shadow-xl">
+        <p className="text-xs md:text-base text-slate-200 font-medium max-w-lg bg-slate-950/75 border border-slate-800 rounded-xl px-4 py-2 mb-4 backdrop-blur-none shadow-xl">
           Parcours Cotonou en Zémidjan ou en bolide, accomplis les contrats de Da Silva et sème la Police Républicaine !
         </p>
 
-        {/* Primary CTA */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md">
+        {/* Primary CTA & Android Fullscreen Launcher */}
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full max-w-md">
           <button
-            onClick={onStartGame}
-            className="w-full py-3.5 px-6 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-base rounded-xl shadow-[0_0_25px_rgba(245,158,11,0.5)] transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2 border border-amber-200"
+            onClick={async () => {
+              if (!isFullscreen) {
+                await toggleFullscreen();
+              }
+              onStartGame();
+            }}
+            className="w-full py-3.5 px-6 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 active:from-amber-600 active:to-amber-400 text-slate-950 font-black text-base rounded-2xl shadow-[0_0_25px_rgba(245,158,11,0.5)] transition duration-150 transform hover:scale-[1.02] flex items-center justify-center gap-2 border border-amber-200"
           >
-            <Play className="w-5 h-5 fill-slate-950" />
-            COMMENCER LA PARTIE (Espace)
+            <Play className="w-5 h-5 fill-slate-950 shrink-0" />
+            <span>COMMENCER LA PARTIE</span>
           </button>
         </div>
 
         {/* Quick Missions Drawer Buttons */}
-        <div className="mt-6 flex flex-wrap justify-center gap-2 max-w-xl">
+        <div className="mt-4 flex flex-wrap justify-center gap-2 max-w-xl">
           {MISSIONS.map((m, idx) => (
             <button
               key={m.id}
-              onClick={() => {
+              onClick={async () => {
+                if (!isFullscreen) {
+                  await toggleFullscreen();
+                }
                 onSelectMission(m.id);
                 onStartGame();
               }}
@@ -127,15 +162,17 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
         </div>
       </div>
 
-      {/* Bottom Flat Control Hint Line */}
-      <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 bg-slate-950/80 border border-slate-800/80 rounded-xl px-4 py-2 pointer-events-auto">
-        <span className="font-mono tracking-wider text-amber-400">
-          WASD Se Déplacer · E/F Monter dans un véhicule · Espace Frein · Clic Attaquer · H Klaxon · R Radio
-        </span>
-        <span className="text-[11px] text-slate-400 font-mono mt-1 sm:mt-0">
-          Audio Procedural Synth + Gemini 3.8 Flash TTS
+      {/* Bottom Flat Control Hint Line & Android Orientation Safe Hint */}
+      <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 bg-slate-950/80 border border-slate-800/80 rounded-xl px-4 py-2 pointer-events-auto gap-1">
+        <div className="flex items-center gap-2 font-mono tracking-wider text-amber-400">
+          <Smartphone className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>Android / Mobile : Joystick Virtuel + Mode Plein Écran Paysage</span>
+        </div>
+        <span className="text-[11px] text-slate-400 font-mono">
+          GTA Cotonou OpenFreeMap 3D · Version Mobile
         </span>
       </div>
     </div>
   );
 };
+

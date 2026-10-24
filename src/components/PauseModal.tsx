@@ -1,6 +1,8 @@
 import React from 'react';
-import { Play, RotateCcw, HelpCircle, Volume2, VolumeX } from 'lucide-react';
+import { Play, RotateCcw, HelpCircle, Volume2, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
 import { sound } from '../game/audio.ts';
+import { useFullscreen } from '../hooks/useFullscreen.ts';
+import { PWAInstallButton } from './PWAInstallButton.tsx';
 
 interface PauseModalProps {
   onResume: () => void;
@@ -14,6 +16,7 @@ export const PauseModal: React.FC<PauseModalProps> = ({
   onOpenHowToPlay,
 }) => {
   const [isMuted, setIsMuted] = React.useState(sound.getMuted());
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const toggleMute = () => {
     const next = !isMuted;
@@ -27,15 +30,36 @@ export const PauseModal: React.FC<PauseModalProps> = ({
         <h2 className="text-2xl font-black text-white font-mono uppercase tracking-wider mb-1">
           JEU EN PAUSE
         </h2>
-        <p className="text-xs text-slate-400 mb-6">GTA Cotonou : Vice Littoral</p>
+        <p className="text-xs text-slate-400 mb-4">GTA Cotonou : Vice Littoral</p>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex justify-center mb-4">
+          <PWAInstallButton className="w-full justify-center" />
+        </div>
+
+        <div className="flex flex-col gap-2.5">
           <button
             onClick={onResume}
-            className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-lg"
+            className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-lg active:scale-95"
           >
             <Play className="w-4 h-4 fill-current" />
             REPRENDRE LA PARTIE
+          </button>
+
+          <button
+            onClick={toggleFullscreen}
+            className="w-full py-2.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/80 text-indigo-200 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 active:scale-95"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-4 h-4 text-indigo-400" />
+                <span>QUITTER LE PLEIN ÉCRAN</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-4 h-4 text-indigo-400" />
+                <span>📱 MODE PLEIN ÉCRAN ANDROID</span>
+              </>
+            )}
           </button>
 
           <button
@@ -66,3 +90,4 @@ export const PauseModal: React.FC<PauseModalProps> = ({
     </div>
   );
 };
+
