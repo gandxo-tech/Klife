@@ -6,11 +6,12 @@ import { GARAGE_LOCATIONS } from '../game/garages.ts';
 interface MinimapProps {
   player: PlayerStats;
   vehicles: ActiveVehicle[];
+  trafficVehicles?: { x: number; z: number; type: string }[];
   activeMission: ActiveMissionState | null;
   size?: number;
 }
 
-export const Minimap: React.FC<MinimapProps> = ({ player, vehicles, activeMission, size = 140 }) => {
+export const Minimap: React.FC<MinimapProps> = ({ player, vehicles, trafficVehicles = [], activeMission, size = 140 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mapRadius = 80; // Visible world units
 
@@ -72,6 +73,24 @@ export const Minimap: React.FC<MinimapProps> = ({ player, vehicles, activeMissio
       ctx.fillStyle = veh.isPolice
         ? (Date.now() % 400 < 200 ? '#EF4444' : '#3B82F6')
         : (veh.type === 'zemidjan' ? '#FACC15' : '#94A3B8');
+      ctx.fill();
+    });
+
+    // Draw AI Traffic Vehicles as discrete small dots
+    trafficVehicles.forEach((tv) => {
+      const coords = worldToMinimapCoords(
+        tv.x,
+        tv.z,
+        player.x,
+        player.z,
+        player.rotationY,
+        mapRadius,
+        size
+      );
+
+      ctx.beginPath();
+      ctx.arc(coords.x, coords.y, 2.0, 0, Math.PI * 2);
+      ctx.fillStyle = tv.type === 'zemidjan' ? '#FACC15' : tv.type === 'bus' ? '#38BDF8' : '#CBD5E1';
       ctx.fill();
     });
 

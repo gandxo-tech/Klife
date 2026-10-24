@@ -46,6 +46,7 @@ import {
 import { sound } from './audio.ts';
 import { MISSIONS } from './missions.ts';
 import { CharacterConfig } from '../components/CharacterCreatorModal.tsx';
+import { TrafficSystem } from './trafficSystem.ts';
 
 const _scratchCamTarget = new THREE.Vector3();
 
@@ -106,6 +107,7 @@ export class GameEngine {
   private vehicles: ActiveVehicle[] = [];
   private vehicleMeshes = new Map<string, THREE.Group>();
   private policeLights: { red: THREE.PointLight; blue: THREE.PointLight }[] = [];
+  private trafficSystem!: TrafficSystem;
 
   private pedestrians: Pedestrian[] = [];
   private pedestrianMeshes = new Map<string, THREE.Group>();
@@ -241,10 +243,11 @@ export class GameEngine {
     this.missionWaypointMesh.visible = false;
     this.scene.add(this.missionWaypointMesh);
 
-    // Spawn Vehicles & Pedestrians
+    // Spawn Vehicles, Pedestrians & Autonomous Traffic System
     this.loadStoredVehicles();
     this.spawnInitialVehicles();
     this.spawnInitialPedestrians();
+    this.trafficSystem = new TrafficSystem(this.scene, 12);
 
     this.setupEventListeners();
     this.clock.start();
@@ -980,12 +983,26 @@ export class GameEngine {
 
       this.updateVehiclesAndPolice(dt);
       this.updatePedestrians(dt);
-      this.updateCamera(dt, isDriving, currentVeh);
-      this.updateMissionLogic(dt);
 
       const anyPoliceNearby = this.vehicles.some(
         (v) => v.isPolice && calculateDistance(this.player.x, this.player.z, v.x, v.z) < 55
       );
+      const isHonking = !!(this.keys['h'] || false);
+
+      if (this.trafficSystem) {
+        this.trafficSystem.update(
+          dt,
+          this.player.x,
+          this.player.z,
+          this.player.wantedStars,
+          anyPoliceNearby,
+          isHonking
+        );
+      }
+
+      this.updateCamera(dt, isDriving, currentVeh);
+      this.updateMissionLogic(dt);
+
       const updatedWanted = updateWantedState(
         this.player.wantedStars,
         this.player.wantedProgress,
@@ -1399,8 +1416,15 @@ export class GameEngine {
     this.callbacks.onNotification(`Route 3D ajoutée : ${road.name}`);
   }
 
+  public getTrafficVehicles() {
+    return this.trafficSystem ? this.trafficSystem.getVehicles() : [];
+  }
+
   public destroy() {
     this.isDestroyed = true;
+    if (this.trafficSystem) {
+      this.trafficSystem.dispose();
+    }
     cancelAnimationFrame(this.frameId);
     clearTimeout(this.frameId);
     window.removeEventListener('resize', this.onResize);

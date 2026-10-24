@@ -204,6 +204,7 @@ export default function App() {
         <HUD
           player={playerStats}
           vehicles={engineRef.current ? (engineRef.current as any).vehicles || [] : []}
+          trafficVehicles={engineRef.current ? engineRef.current.getTrafficVehicles() : []}
           activeVehicle={activeVehicle}
           activeMission={activeMission}
           notification={notification}

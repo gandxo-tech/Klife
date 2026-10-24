@@ -371,6 +371,96 @@ export function createTaxi505Mesh(): THREE.Group {
 }
 
 /**
+ * 3.5. Minibus Tokpa-Tokpa (Transports collectifs populaires de Cotonou)
+ */
+export function createTokpaTokpaBusMesh(): THREE.Group {
+  const group = new THREE.Group();
+
+  // Van body
+  const bodyGeo = new THREE.BoxGeometry(2.1, 1.4, 4.8);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0284C7, roughness: 0.3, metalness: 0.2 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.set(0, 1.1, 0);
+  body.castShadow = true;
+  group.add(body);
+
+  // White stripe along side
+  const stripeGeo = new THREE.BoxGeometry(2.14, 0.25, 4.6);
+  const stripeMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.4 });
+  const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+  stripe.position.set(0, 1.1, 0);
+  group.add(stripe);
+
+  // Windows
+  const glassMat = new THREE.MeshStandardMaterial({ color: 0x38BDF8, transparent: true, opacity: 0.5, roughness: 0.1 });
+  const frontWindshield = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.65, 0.08), glassMat);
+  frontWindshield.position.set(0, 1.35, 2.38);
+  frontWindshield.rotateX(-0.2);
+  group.add(frontWindshield);
+
+  // Side windows
+  const sideGlassGeo = new THREE.BoxGeometry(2.16, 0.45, 3.2);
+  const sideGlass = new THREE.Mesh(sideGlassGeo, glassMat);
+  sideGlass.position.set(0, 1.35, -0.3);
+  group.add(sideGlass);
+
+  // Wheels
+  const wheelPositions = [
+    [-1.08, 0.42, 1.5],
+    [1.08, 0.42, 1.5],
+    [-1.08, 0.42, -1.5],
+    [1.08, 0.42, -1.5],
+  ];
+  wheelPositions.forEach(([x, y, z]) => {
+    const wheel = createWheel(0.42, 0.24);
+    wheel.position.set(x, y, z);
+    group.add(wheel);
+  });
+
+  // Destination Signboard "DANTOKPA - ÉTOILE ROUGE"
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 256;
+  signCanvas.height = 48;
+  const ctx = signCanvas.getContext('2d')!;
+  ctx.fillStyle = '#F59E0B';
+  ctx.fillRect(0, 0, 256, 48);
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TOKPA-TOKPA COTONOU', 128, 24);
+
+  const signTex = new THREE.CanvasTexture(signCanvas);
+  signTex.colorSpace = THREE.SRGBColorSpace;
+  const signMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.5, 0.32),
+    new THREE.MeshBasicMaterial({ map: signTex })
+  );
+  signMesh.position.set(0, 1.72, 2.38);
+  signMesh.rotateX(-0.1);
+  group.add(signMesh);
+
+  // Headlights
+  const lightGeo = new THREE.BoxGeometry(0.32, 0.2, 0.06);
+  const lightMat = new THREE.MeshStandardMaterial({ color: 0xFFFF8D, emissive: 0xFFD54F, emissiveIntensity: 0.7 });
+  const lightL = new THREE.Mesh(lightGeo, lightMat);
+  lightL.position.set(-0.75, 0.75, 2.41);
+  const lightR = new THREE.Mesh(lightGeo, lightMat);
+  lightR.position.set(0.75, 0.75, 2.41);
+  group.add(lightL, lightR);
+
+  // Shadow
+  const shadowGeo = new THREE.PlaneGeometry(2.5, 5.2);
+  shadowGeo.rotateX(-Math.PI / 2);
+  const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.4 });
+  const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+  shadow.position.y = 0.02;
+  group.add(shadow);
+
+  return group;
+}
+
+/**
  * 4. Luxury G-Wagon SUV
  */
 export function createGWagonMesh(): THREE.Group {

@@ -35,6 +35,7 @@ import {
 interface HUDProps {
   player: PlayerStats;
   vehicles: ActiveVehicle[];
+  trafficVehicles?: { x: number; z: number; type: string }[];
   activeVehicle: ActiveVehicle | null;
   activeMission: ActiveMissionState | null;
   notification: string | null;
@@ -54,6 +55,7 @@ interface HUDProps {
 export const HUD: React.FC<HUDProps> = ({
   player,
   vehicles,
+  trafficVehicles = [],
   activeVehicle,
   activeMission,
   notification,
@@ -131,7 +133,7 @@ export const HUD: React.FC<HUDProps> = ({
       <div className="absolute top-3 left-3 flex flex-col gap-2 pointer-events-auto z-20">
         {/* Radar Map */}
         <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-700/80 bg-slate-950/90">
-          <Minimap player={player} vehicles={vehicles} activeMission={activeMission} size={115} />
+          <Minimap player={player} vehicles={vehicles} trafficVehicles={trafficVehicles} activeMission={activeMission} size={115} />
         </div>
 
         {/* Compact Quick Action Bar */}

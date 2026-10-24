@@ -10,6 +10,7 @@ import {
   stepVehiclePhysics,
   VEHICLE_CONFIGS,
 } from './rules.ts';
+import { COTONOU_TRAFFIC_PATHS } from './trafficSystem.ts';
 
 test('formatFCFA properly groups thousands with spaces', () => {
   assert.equal(formatFCFA(1500000), '1 500 000 FCFA');
@@ -69,4 +70,15 @@ test('stepVehiclePhysics accelerates and limits maxSpeed', () => {
   // Exceeding max speed clamped
   const maxed = stepVehiclePhysics(config.maxSpeed + 10, 0, 1.0, 0, config, 0.1);
   assert.equal(maxed.speed, config.maxSpeed);
+});
+
+test('COTONOU_TRAFFIC_PATHS contains valid waypoint loops', () => {
+  assert.ok(COTONOU_TRAFFIC_PATHS.length >= 4);
+  COTONOU_TRAFFIC_PATHS.forEach((path: any) => {
+    assert.ok(path.length >= 3);
+    path.forEach((wp: any) => {
+      assert.equal(typeof wp.x, 'number');
+      assert.equal(typeof wp.z, 'number');
+    });
+  });
 });
