@@ -1,0 +1,6 @@
+{
+  "name": "GTA Cotonou : Vice Littoral",
+  "description": "Jeu d'action 3D en monde ouvert inspiré de GTA à Cotonou, Bénin. Missions, Zémidjans, bolides, Dantokpa, Étoile Rouge et poursuites policières.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
