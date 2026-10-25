@@ -102,6 +102,7 @@ export class GameEngine {
   // Indoor vs City State
   public isIndoorBedroom: boolean = true;
   private bedroomScene!: BedroomScene;
+  private sunLight!: THREE.DirectionalLight;
 
   // Game World State
   private obstacles: WorldObstacle[] = [];
@@ -213,12 +214,25 @@ export class GameEngine {
     this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
     pmremGenerator.dispose();
 
-    const sunLight = new THREE.DirectionalLight(0xFFF3E0, 2.2);
-    sunLight.position.set(60, 100, 40);
-    sunLight.castShadow = !this.isSoftwareGl;
-    this.scene.add(sunLight);
+    // West African Tropical Midday Sun & Sharp PCF Shadows
+    this.sunLight = new THREE.DirectionalLight(0xFFF7E6, 2.6);
+    this.sunLight.position.set(50, 120, 35);
+    this.sunLight.castShadow = !this.isSoftwareGl;
+    this.sunLight.shadow.mapSize.width = 2048;
+    this.sunLight.shadow.mapSize.height = 2048;
+    this.sunLight.shadow.camera.near = 1;
+    this.sunLight.shadow.camera.far = 280;
+    this.sunLight.shadow.camera.left = -80;
+    this.sunLight.shadow.camera.right = 80;
+    this.sunLight.shadow.camera.top = 80;
+    this.sunLight.shadow.camera.bottom = -80;
+    this.sunLight.shadow.bias = -0.0004;
+    this.sunLight.shadow.normalBias = 0.02;
+    this.scene.add(this.sunLight);
+    this.scene.add(this.sunLight.target);
 
-    const hemiLight = new THREE.HemisphereLight(0x81D4FA, 0x4E342E, 1.2);
+    // Tropical Atlantic azure sky bounce + warm latérite ground reflection
+    const hemiLight = new THREE.HemisphereLight(0x38BDF8, 0xD97706, 1.25);
     this.scene.add(hemiLight);
 
     // Build Indoor Bedroom Scene
@@ -795,6 +809,10 @@ export class GameEngine {
       this.updateSimulation(dt);
     }
 
+    if (this.isIndoorBedroom && this.bedroomScene) {
+      this.bedroomScene.update(dt);
+    }
+
     if (this.waterMesh) {
       const elapsed = this.clock.getElapsedTime();
       this.waterMesh.position.y = 0.08 + Math.sin(elapsed * 1.5) * 0.035;
@@ -1315,6 +1333,12 @@ export class GameEngine {
       this.player.z + Math.cos(heading) * lookAhead
     );
     this.camera.lookAt(_scratchCamTarget);
+
+    // Keep the high-resolution shadow frustum centered tightly around the player
+    if (this.sunLight) {
+      this.sunLight.position.set(this.player.x + 50, 120, this.player.z + 35);
+      this.sunLight.target.position.set(this.player.x, 0, this.player.z);
+    }
   }
 
   private updateMissionLogic(dt: number) {

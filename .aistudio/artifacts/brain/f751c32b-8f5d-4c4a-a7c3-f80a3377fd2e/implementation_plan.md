@@ -1,85 +1,101 @@
-# Système de Trafic IA Autonome à Cotonou (Zémidjans, Taxis & Tokpa-Tokpa)
+# Plan de Modélisation 3D Haute Fidélité : Cotonou & Intérieurs
 
-Mise en place d'une circulation routière autonome 3D fluide et dynamique dans les rues principales de Cotonou (Dantokpa, Étoile Rouge, Fidjrossè, Cadjehoun, Akpakpa) avec réactivité en temps réel au klaxon du joueur et aux sirènes de la Police Républicaine.
-
-## Choix de l'Utilisateur & Décisions Confirmées
-
-> [!IMPORTANT]
-> - **Densité du Trafic** : 10 à 15 véhicules IA simultanés en circulation active (densité équilibrée optimisée pour 60 FPS sur mobile Android).
-> - **Composition de la Flotte** :
->   1. **Zémidjans Jaunes** (Motos-taxis emblématiques avec chauffeur à chasuble jaune).
->   2. **Taxis Jaunâtres Cotonois** (Voitures citadines légères).
->   3. **Minibuses Tokpa-Tokpa** (Transports collectifs populaires aux couleurs variées).
-> - **Comportement IA Dynamique** : Conduite le long des voies de circulation définies par le réseau OpenStreetMap, évitement/freinage automatique devant les obstacles et réaction dynamique (écartement ou coup de volant/accélération) lors des coups de klaxon (touche `H` / bouton tactique) ou au passage d'un véhicule de police sirène hurlante (étoiles de recherche > 0).
+Mise à niveau complète du moteur de rendu Three.js et des actifs 3D de **GTA Cotonou : Vice Littoral**, alignée sur les 3 choix confirmés de l'utilisateur :
+1. **Textures détaillées et façades de bâtiments réalistes** (PBR procédural Canvas, crépis ouest-africain, persiennes naco, stores vénitiens, tôles de toiture).
+2. **Soleil tropical d'Afrique de l'Ouest avec ombres nettes** (DirectionalLight zénithal, PCFSoftShadowMap 2048², rebond atmosphérique équatorial).
+3. **Modélisation haute densité avec détails intérieurs complets** (Chambre de Sikè-Fictif ultra-détaillée avec ventilateur de plafond animé, bureau complet, mobilier, literie wax, appareillages muraux).
 
 ---
 
-## 1. Vue d'Ensemble & Architecture
-
-Le système de trafic autonome reposera sur un moteur de patrouille et de circulation légère (`src/game/trafficSystem.ts`) intégré dans la boucle de rendu principale du `GameEngine.ts`.
+## 1. Architecture des Nouveaux Éléments 3D
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        Réseau Routier OpenStreetMap                    │
-│             (Sommets & Tronçons de Voies Principales Cotonou)          │
+│                        Textures & Matériaux PBR                        │
+│  src/game/textures.ts                                                 │
+│  - createTropicalStuccoTexture()       : Crépis sablonneux patiné      │
+│  - createCorrugatedRoofTexture()       : Tôles ondulées zinguées/rouille│
+│  - createLouvreWindowTexture()         : Persiennes & jalousies Naco   │
+│  - createShopfrontGlassTexture()       : Vitrines avec cadres alu      │
+│  - createTerracottaTileFloorTexture()  : Carreaux céramiques lustrés   │
+│  - createACUnitTexture()               : Grille ventilateur climatiseur│
 └──────────────────────────────────┬─────────────────────────────────────┘
                                    │
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                         TrafficSystem (10-15 IA)                       │
-│  - Boucle Waypoints & Interpolation de Position                        │
-│  - Détection de Proximité (Joueur, Police, Voitures)                   │
-│  - Gestionnaire d'Événements (Klaxon 'H', Sirènes de Police)           │
+│                    Éclairage Solaire Tropical & Ombres                 │
+│  src/game/GameEngine.ts                                                │
+│  - Soleil équatorial zénithal (DirectionalLight 0xFFF7E6, intensité 2.6)│
+│  - Shadow Map 2048x2048 avec bias optimisé (-0.0005) & PCFSoftShadow  │
+│  - HemisphereLight : Ciel atlantique azur (0x38BDF8) / Sol latérite    │
+│  - Frustum d'ombre centré dynamiquement sur le joueur                  │
 └──────────────────────────────────┬─────────────────────────────────────┘
                                    │
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                      Rendu 3D Three.js & Physique                      │
-│  - Meshes PBR 3D : Zémidjans, Taxis & Minibuses Tokpa-Tokpa            │
-│  - Blips minimap dédiés (points blancs / gris)                         │
+│                   Modélisation Façades & Urbaine                       │
+│  src/game/models.ts & src/game/cityMap.ts                              │
+│  - Façades multicouches : corniches, balcons en fer forgé, auvents     │
+│  - Climatiseurs extérieurs split avec tuyaux de vidange & hélice       │
+│  - Compteurs électriques & câblages urbains réalistes                  │
+│  - Citernes d'eau Rotoplas 1000L détaillées avec robinetterie          │
 └──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│               Intérieur Haute Densité : Chambre Sikè-Fictif            │
+│  src/game/BedroomScene.ts                                              │
+│  - Ventilateur de plafond 3 pales avec rotation continue fluide        │
+│  - Lit complet : sommier bois sculpté, matelas, parure wax & coussins  │
+│  - Bureau multimédia : ordinateur portable, smartphone, multiprise     │
+│  - Dressing & miroir réaliste avec reflets et vêtements suspendus      │
+│  - Interrupteurs, prises murales, tableau électrique et tableau mural   │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Découpage Technique des Modifications
+## 2. Découpage Détaillé des Tâches
 
-### A. Réseau de Waypoints Routiers (`src/game/cityMap.ts`)
-- Extraction et définition des circuits en boucle fermée et interconnections entre les grands carrefours de Cotonou :
-  - **Axe Dantokpa ↔ Étoile Rouge**
-  - **Axe Étoile Rouge ↔ Fidjrossè / Aéroport**
-  - **Axe Ganhi / Marina ↔ Akpakpa**
-- Génération automatique des points de passage (waypoints) le long des voies OSM.
+### A. Générateur de Textures PBR Procédurales (`src/game/textures.ts`)
+- **Crépis mural tropical** : Texture de micro-relief reproduisant le ciment lissé à la truelle et patiné par les embruns marins et l'harmattan.
+- **Tôles ondulées de toiture** : Alternance d'ondulations régulières avec légères coulures de rouille et reflets métalliques.
+- **Jalousies / Fenêtres Naco** : Lames de verre orientables et cadres aluminium caractéristiques de l'architecture côtière de Cotonou.
+- **Carreaux de sol céramiques** : Joints nets, reflets vernis et légères variations de teinte pour les sols intérieurs et terrasses.
+- **Façades de climatiseurs split** : Grille d'aération, logo de marque et reflets métalliques.
 
-### B. Moteur de Trafic IA (`src/game/trafficSystem.ts`)
-- **Structure d'un Véhicule IA** :
-  - `id`: identifiant unique
-  - `type`: `'zemidjan' | 'taxi' | 'bus'`
-  - `mesh`: `THREE.Group` du modèle 3D
-  - `position` & `rotation` (coordonnées 3D)
-  - `speed` & `maxSpeed` (adapté selon le type: Zémidjan plus agile, bus plus lent)
-  - `waypointIndex`: indice sur le tronçon de voie en cours
-  - `panicTimer`: durée de réaction panique suite au klaxon/sirène
-- **Comportements IA** :
-  - *Avancée régulée* : Suivi des waypoints avec lissage de trajectoire.
-  - *Freinage d'urgence* : Arrêt à distance de sécurité lorsqu'un véhicule ou le joueur bloque la voie.
-  - *Réaction Klaxon (`onHonk`)* : Les Zémidjans s'écartent légèrement sur le bas-côté et accélèrent brièvement ; les taxis et buses klaxonnent en retour ou ralentissent pour laisser passer.
-  - *Réaction Sirène Police* : Quand les étoiles de recherche du joueur sont > 0 et qu'un véhicule de police s'approche, les véhicules IA se déportent sur la droite pour libérer la chaussée.
+### B. Éclairage Tropical Zénithal & Ombres Nettes (`src/game/GameEngine.ts`)
+- Configuration de la lumière directionnelle du soleil avec un angle zénithal caractéristique de la latitude de Cotonou (6°N).
+- Paramétrage de la carte d'ombres :
+  - Résolution portée à `2048x2048` pour des arêtes d'ombres nettes et précises.
+  - Frustum orthographique calibré (`left: -70, right: 70, top: 70, bottom: -70, near: 1, far: 250`).
+  - Décalage de la caméra d'ombre suivant la position du joueur pour maintenir la netteté en temps réel partout sur la carte.
+- Ambiance équatoriale : Ciel bleu éclatant avec léger voile atmosphérique côtier chaud (fog équilibré pour la profondeur sans masquer les bâtiments).
 
-### C. Modélisation 3D Procédurale des Véhicules IA (`src/game/models.ts`)
-- **Zémidjan 3D** : Moto 2 roues avec chauffeur portant une chasuble jaune vif "ZEM 229" et casque.
-- **Taxi Jaune Cotonou** : Berline citadine aux portes/capot jaune taxi.
-- **Minibus Tokpa-Tokpa** : Minivan 9 places populaire aux fenêtres ouvertes et détails réalistes.
+### C. Refonte Haute Densité des Bâtiments Urbains (`src/game/models.ts` & `src/game/cityMap.ts`)
+- Mise à niveau de `createCotonouBuildingMesh` :
+  - Ajout de balcons 3D avec garde-corps métalliques modélisés.
+  - Fixation d'unités extérieures de climatisation (groupes split) sur les façades supérieures.
+  - Corniches décoratives et brise-soleil verticaux/horizontaux géométriques.
+  - Portes d'entrée et devantures de commerces en retrait (volume intérieur visible depuis la rue).
+  - Détails de toiture enrichis : citernes Rotoplas avec tuyauterie PVC, paraboles TV et antennes râteau.
 
-### D. Intégration dans le Moteur de Jeu (`src/game/GameEngine.ts`) & HUD
-- Instanciation du `TrafficSystem` dans le `GameEngine`.
-- Mise à jour à chaque frame (`delta` de temps) avec recyclage à distance (les véhicules trop éloignés du joueur se respawnent sur des waypoints proches pour optimiser la mémoire).
-- Affichage des véhicules IA sous forme de petits blips discrets sur la Minimap radar (`Minimap.tsx`).
+### D. Refonte de la Chambre Intérieure (`src/game/BedroomScene.ts`)
+- Remplacement du mobilier schématique par des modèles haute densité :
+  - **Ventilateur de plafond** : moteur central suspendu, 3 pales aérodynamiques incurvées avec animation de rotation continue (`update(delta)`).
+  - **Lit traditionnel moderne** : tête de lit en bois d'iroko verni, matelas avec drap-housse, couette en pagne Wax béninois aux motifs géométriques vibrants, et oreillers moelleux.
+  - **Espace de travail** : bureau en bois avec tiroirs et poignées, ordinateur portable ouvert avec touches de clavier et écran rétro-éclairé, smartphone en charge, carnet de notes et stylo.
+  - **Détails de vie et finitions** : prises électriques murales (format standard 220V), interrupteur d'éclairage près de la porte, plinthes en bois au bas des murs, rideaux en tissu wax aux fenêtres, et grille d'aération haute.
 
 ---
 
-## 3. Plan de Test & Vérification
+## 3. Plan de Vérification & Tests
 
-1. **Compilation & Linter** : Exécution de `lint_applet` (`npm run lint`) et `compile_applet`.
-2. **Tests Unitaires Pure Logic** : Ajout de tests dans `src/game/rules.test.ts` pour valider la génération des waypoints et la détection de proximité du trafic IA (`npx tsx --test`).
-3. **Validation Visuelle & Performance** : Vérification de la fluidité à 60 FPS avec 12 véhicules IA en circulation simultanée sur la carte 3D de Cotonou.
+1. **Compilation & Intégrité** :
+   - Exécution de `compile_applet` pour garantir l'absence totale d'erreurs TypeScript.
+   - Validation de la suite de tests unitaires existante (`rules.test.ts` et `geoUtils.test.ts`).
+2. **Fluidité & Performances** :
+   - Vérification du maintien des 60 FPS grâce au partage judicieux des géométries et matériaux générés procéduralement.
+3. **Contrôle Visuel** :
+   - Rendu de la chambre intérieure de Sikè-Fictif : vérification de l'animation du ventilateur, des détails de literie et du mobilier.
+   - Rendu en extérieur : vérification des façades avec textures crépis/naco, climatiseurs, et des ombres nettes portées par le soleil tropical.

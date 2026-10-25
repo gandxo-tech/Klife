@@ -6,6 +6,13 @@
  */
 
 import * as THREE from 'three';
+import {
+  createTropicalStuccoTexture,
+  createLouvreWindowTexture,
+  createACUnitTexture,
+  createStripedAwningTexture,
+  createCorrugatedRoofTexture,
+} from './textures.ts';
 
 // Procedural texture generators
 function createWaxPatternTexture(): THREE.CanvasTexture {
@@ -1166,8 +1173,13 @@ export function createMarketStallMesh(shadeColorHex: number = 0xE53935): THREE.G
     group.add(pole);
   });
 
-  // Striped Canopy
-  const canopyMat = new THREE.MeshStandardMaterial({ color: shadeColorHex, roughness: 0.6, side: THREE.DoubleSide });
+  // Striped Canopy or Corrugated Zinc Roof (Authentic Dantokpa market sheds)
+  const canopyMat = new THREE.MeshStandardMaterial({
+    map: shadeColorHex === 0xDC2626 ? createStripedAwningTexture('#DC2626', '#FEF08A') : createCorrugatedRoofTexture(),
+    roughness: 0.5,
+    metalness: shadeColorHex === 0xDC2626 ? 0.05 : 0.65,
+    side: THREE.DoubleSide,
+  });
   const canopyGeo = new THREE.BoxGeometry(3.6, 0.15, 2.2);
   canopyGeo.rotateX(-0.1);
   const canopy = new THREE.Mesh(canopyGeo, canopyMat);
@@ -1384,9 +1396,10 @@ export function createGarageMesh(titleText: string): THREE.Group {
 
   // Garage Main Structure
   const buildingMat = new THREE.MeshStandardMaterial({
+    map: createTropicalStuccoTexture('#374151'),
     color: 0x374151, // Industrial Slate Grey
-    roughness: 0.6,
-    metalness: 0.2,
+    roughness: 0.75,
+    metalness: 0.15,
   });
   const building = new THREE.Mesh(new THREE.BoxGeometry(16, 7.5, 14), buildingMat);
   building.position.set(0, 3.75, 0);
@@ -1400,14 +1413,16 @@ export function createGarageMesh(titleText: string): THREE.Group {
   trim.position.set(0, 7.5, 0);
   group.add(trim);
 
-  // Large Shutter Bay Door (Roll-up metal door)
+  // Large Shutter Bay Door (Roll-up corrugated metal door)
   const shutterMat = new THREE.MeshStandardMaterial({
-    color: 0x9CA3AF,
-    roughness: 0.4,
-    metalness: 0.8,
+    map: createCorrugatedRoofTexture(),
+    color: 0xCBD5E1,
+    roughness: 0.35,
+    metalness: 0.85,
   });
   const shutter = new THREE.Mesh(new THREE.BoxGeometry(8, 5.2, 0.2), shutterMat);
   shutter.position.set(0, 2.6, 7.05);
+  shutter.castShadow = true;
   group.add(shutter);
 
   // Door Frame Accent
@@ -1488,6 +1503,13 @@ export function createGarageMesh(titleText: string): THREE.Group {
  * window grids with sills & sun visors, rooftop terrace with blue water tank (Citerne Rotoplas),
  * satellite TV dish, and radio antenna mast.
  */
+/**
+ * 16. Authentic Multi-Story Cotonou Building (High-Density PBR)
+ * Features textured tropical stucco walls, recessed ground-floor boutiques,
+ * Naco louver windows with sunshades, 3D balconies with metal railings,
+ * outdoor split air-conditioning compressors with drainage pipes,
+ * rooftop terrace with Rotoplas 1000L water tank, satellite dish & antenna mast.
+ */
 export function createCotonouBuildingMesh(
   width: number,
   height: number,
@@ -1498,11 +1520,14 @@ export function createCotonouBuildingMesh(
 ): THREE.Group {
   const group = new THREE.Group();
 
-  // Main Concrete Stucco Body
+  const hexString = '#' + wallColorHex.toString(16).padStart(6, '0');
+
+  // Main Concrete Stucco Body with Procedural Tropical Stucco Texture
   const wallMat = new THREE.MeshStandardMaterial({
+    map: createTropicalStuccoTexture(hexString),
     color: wallColorHex,
-    roughness: 0.7,
-    metalness: 0.1,
+    roughness: 0.78,
+    metalness: 0.08,
   });
   const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), wallMat);
   body.position.y = height / 2;
@@ -1510,96 +1535,203 @@ export function createCotonouBuildingMesh(
   body.receiveShadow = true;
   group.add(body);
 
-  // Concrete Base Plinth / Sidewalk curb
-  const plinthMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
+  // Concrete Base Plinth / Sidewalk curb (Trottoir en ciment)
+  const plinthMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 });
   const plinth = new THREE.Mesh(new THREE.BoxGeometry(width + 0.8, 0.4, depth + 0.8), plinthMat);
   plinth.position.y = 0.2;
   plinth.receiveShadow = true;
   group.add(plinth);
 
-  // Ground floor commercial shopfront facade
-  const shopMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.3, metalness: 0.5 });
-  const shopWidth = Math.min(width * 0.75, width - 4);
-  const shopDoor = new THREE.Mesh(new THREE.PlaneGeometry(shopWidth, 3.2), shopMat);
-  shopDoor.position.set(0, 1.8, depth / 2 + 0.05);
-  group.add(shopDoor);
+  // Recessed Ground Floor Commercial Shopfront Facade
+  const shopWidth = Math.min(width * 0.78, width - 3.5);
+  const shopHeight = 3.4;
 
-  // Commercial banner sign
+  // Shop entrance recess alcove
+  const shopNiche = new THREE.Mesh(
+    new THREE.BoxGeometry(shopWidth, shopHeight, 0.6),
+    new THREE.MeshStandardMaterial({ color: 0x0F172A, roughness: 0.6 })
+  );
+  shopNiche.position.set(0, shopHeight / 2 + 0.1, depth / 2 - 0.2);
+  group.add(shopNiche);
+
+  // Shop glass windows and doors
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x38BDF8,
+    metalness: 0.9,
+    roughness: 0.1,
+    transparent: true,
+    opacity: 0.65,
+  });
+  const shopGlass = new THREE.Mesh(new THREE.PlaneGeometry(shopWidth * 0.92, shopHeight * 0.82), glassMat);
+  shopGlass.position.set(0, shopHeight / 2 + 0.1, depth / 2 - 0.1);
+  group.add(shopGlass);
+
+  // Shop door aluminium frame
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x0284C7, metalness: 0.7, roughness: 0.3 });
+  const shopFrame = new THREE.Mesh(new THREE.BoxGeometry(shopWidth * 0.96, 0.1, 0.1), frameMat);
+  shopFrame.position.set(0, shopHeight * 0.9, depth / 2 - 0.05);
+  group.add(shopFrame);
+
+  // Commercial banner sign board with 3D bracket
   if (signTexture) {
     const signBoard = new THREE.Mesh(
-      new THREE.PlaneGeometry(shopWidth * 0.9, 2.0),
+      new THREE.PlaneGeometry(shopWidth * 0.92, 1.8),
       new THREE.MeshBasicMaterial({ map: signTexture })
     );
-    signBoard.position.set(0, 3.8, depth / 2 + 0.1);
+    signBoard.position.set(0, shopHeight + 1.1, depth / 2 + 0.12);
     group.add(signBoard);
+
+    // Sign frame rim
+    const sRimMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.6, roughness: 0.3 });
+    const sRim = new THREE.Mesh(new THREE.BoxGeometry(shopWidth * 0.94, 1.9, 0.08), sRimMat);
+    sRim.position.set(0, shopHeight + 1.1, depth / 2 + 0.08);
+    group.add(sRim);
   }
 
-  // Shop entrance awning (Colorful African striped canopy or metal overhang)
+  // Shop entrance awning (Striped canopy)
   if (hasAwning) {
     const awningMat = new THREE.MeshStandardMaterial({
-      color: 0xE65100, // Vibrant orange
+      map: createStripedAwningTexture(
+        wallColorHex === 0xF1F5F9 ? '#DC2626' : '#D97706',
+        '#FEF08A'
+      ),
       roughness: 0.6,
       side: THREE.DoubleSide,
     });
-    const awning = new THREE.Mesh(new THREE.BoxGeometry(shopWidth + 1.0, 0.15, 2.0), awningMat);
-    awning.position.set(0, 3.4, depth / 2 + 1.0);
-    awning.rotateX(-0.18);
+    const awning = new THREE.Mesh(new THREE.BoxGeometry(shopWidth + 0.8, 0.1, 2.2), awningMat);
+    awning.position.set(0, shopHeight + 0.2, depth / 2 + 1.1);
+    awning.rotateX(-0.16);
     awning.castShadow = true;
     group.add(awning);
+
+    // Awning side support struts
+    const strutMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.8, roughness: 0.2 });
+    [-1, 1].forEach((dir) => {
+      const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.0, 8), strutMat);
+      strut.position.set(dir * (shopWidth / 2 + 0.3), shopHeight - 0.5, depth / 2 + 1.0);
+      strut.rotateX(-Math.PI / 4);
+      group.add(strut);
+    });
   }
 
   // Multi-tier window rows on upper floors
-  const windowMat = new THREE.MeshStandardMaterial({
-    color: 0x0F172A,
-    roughness: 0.1,
-    metalness: 0.9,
-  });
-  const visorMat = new THREE.MeshStandardMaterial({ color: 0x94A3B8, roughness: 0.5 });
-
   const numFloors = Math.max(1, Math.floor(height / 4) - 1);
-  const windowsPerRow = Math.max(2, Math.floor(width / 5));
+  const windowsPerRow = Math.max(2, Math.floor(width / 5.2));
+  const visorMat = new THREE.MeshStandardMaterial({ color: 0x94A3B8, roughness: 0.5 });
+  const railMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.8, roughness: 0.2 });
 
   for (let f = 1; f <= numFloors; f++) {
-    const floorY = 4.0 + f * 3.4;
-    if (floorY > height - 2.5) break;
+    const floorY = 4.4 + f * 3.6;
+    if (floorY > height - 2.8) break;
 
     for (let w = 0; w < windowsPerRow; w++) {
       const wx = -width / 2 + ((w + 1) * width) / (windowsPerRow + 1);
 
-      // Front window
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.8), windowMat);
+      // Front Naco Louver Window
+      const winGeo = new THREE.PlaneGeometry(1.6, 2.0);
+      const winMat = new THREE.MeshStandardMaterial({
+        map: createLouvreWindowTexture(),
+        roughness: 0.25,
+        metalness: 0.8,
+      });
+      const win = new THREE.Mesh(winGeo, winMat);
       win.position.set(wx, floorY, depth / 2 + 0.05);
       group.add(win);
 
-      // Concrete sun visor (brise-soleil)
-      const visor = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.12, 0.6), visorMat);
-      visor.position.set(wx, floorY + 1.0, depth / 2 + 0.35);
+      // Concrete sun visor (brise-soleil au-dessus de la fenêtre)
+      const visor = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.14, 0.65), visorMat);
+      visor.position.set(wx, floorY + 1.15, depth / 2 + 0.35);
+      visor.castShadow = true;
       group.add(visor);
 
       // Back window
-      const winB = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.8), windowMat);
+      const winB = new THREE.Mesh(winGeo, winMat);
       winB.position.set(wx, floorY, -depth / 2 - 0.05);
       winB.rotateY(Math.PI);
       group.add(winB);
+
+      // Middle window on floor 1 gets a full 3D balcony!
+      if (w === Math.floor(windowsPerRow / 2)) {
+        const balcSlab = new THREE.Mesh(
+          new THREE.BoxGeometry(2.4, 0.2, 1.2),
+          new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 })
+        );
+        balcSlab.position.set(wx, floorY - 1.0, depth / 2 + 0.6);
+        balcSlab.castShadow = true;
+        group.add(balcSlab);
+
+        // Balcony wrought-iron railings
+        const railTop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.06, 0.06), railMat);
+        railTop.position.set(wx, floorY - 0.2, depth / 2 + 1.18);
+        const railLeft = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 1.2), railMat);
+        railLeft.position.set(wx - 1.17, floorY - 0.2, depth / 2 + 0.6);
+        const railRight = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 1.2), railMat);
+        railRight.position.set(wx + 1.17, floorY - 0.2, depth / 2 + 0.6);
+        group.add(railTop, railLeft, railRight);
+
+        // Vertical balusters
+        for (let bx = -1.0; bx <= 1.0; bx += 0.35) {
+          const balust = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.75, 6), railMat);
+          balust.position.set(wx + bx, floorY - 0.58, depth / 2 + 1.18);
+          group.add(balust);
+        }
+      } else {
+        // Other windows get an outdoor split AC unit mounted beneath the sill!
+        if (f % 2 === 1 && w % 2 === 0) {
+          const acUnit = new THREE.Mesh(
+            new THREE.BoxGeometry(1.2, 0.6, 0.4),
+            new THREE.MeshStandardMaterial({
+              map: createACUnitTexture(),
+              roughness: 0.4,
+              metalness: 0.3,
+            })
+          );
+          acUnit.position.set(wx, floorY - 1.4, depth / 2 + 0.25);
+          acUnit.castShadow = true;
+          group.add(acUnit);
+
+          // PVC drainage pipe running down
+          const pipe = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 1.8, 6),
+            new THREE.MeshStandardMaterial({ color: 0xCBD5E1, roughness: 0.5 })
+          );
+          pipe.position.set(wx + 0.5, floorY - 2.2, depth / 2 + 0.08);
+          group.add(pipe);
+        }
+      }
     }
   }
 
   // Rooftop Parapet Wall (Safety rim around terrace)
-  const parapetMat = new THREE.MeshStandardMaterial({ color: wallColorHex, roughness: 0.8 });
-  const pFront = new THREE.Mesh(new THREE.BoxGeometry(width, 1.0, 0.4), parapetMat);
-  pFront.position.set(0, height + 0.5, depth / 2 - 0.2);
-  const pBack = new THREE.Mesh(new THREE.BoxGeometry(width, 1.0, 0.4), parapetMat);
-  pBack.position.set(0, height + 0.5, -depth / 2 + 0.2);
-  const pLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, depth), parapetMat);
-  pLeft.position.set(-width / 2 + 0.2, height + 0.5, 0);
-  const pRight = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, depth), parapetMat);
-  pRight.position.set(width / 2 - 0.2, height + 0.5, 0);
+  const parapetMat = new THREE.MeshStandardMaterial({
+    map: createTropicalStuccoTexture(hexString),
+    color: wallColorHex,
+    roughness: 0.85,
+  });
+  const pFront = new THREE.Mesh(new THREE.BoxGeometry(width, 1.1, 0.4), parapetMat);
+  pFront.position.set(0, height + 0.55, depth / 2 - 0.2);
+  const pBack = new THREE.Mesh(new THREE.BoxGeometry(width, 1.1, 0.4), parapetMat);
+  pBack.position.set(0, height + 0.55, -depth / 2 + 0.2);
+  const pLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.1, depth), parapetMat);
+  pLeft.position.set(-width / 2 + 0.2, height + 0.55, 0);
+  const pRight = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.1, depth), parapetMat);
+  pRight.position.set(width / 2 - 0.2, height + 0.55, 0);
   group.add(pFront, pBack, pLeft, pRight);
+
+  // Rooftop Floor (Waterproof bitumen/concrete slab)
+  const roofSlab = new THREE.Mesh(
+    new THREE.PlaneGeometry(width - 0.8, depth - 0.8),
+    new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9 })
+  );
+  roofSlab.rotateX(-Math.PI / 2);
+  roofSlab.position.set(0, height + 0.02, 0);
+  roofSlab.receiveShadow = true;
+  group.add(roofSlab);
 
   // Rooftop Water Tank (Iconic blue "Citerne Rotoplas 1000L" seen everywhere in Cotonou)
   const tankMat = new THREE.MeshStandardMaterial({ color: 0x0284C7, roughness: 0.3, metalness: 0.2 });
   const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 2.2, 16), tankMat);
-  tank.position.set(width * 0.25, height + 1.2, depth * 0.2);
+  tank.position.set(width * 0.25, height + 1.3, depth * 0.2);
   tank.castShadow = true;
   group.add(tank);
 
@@ -1608,6 +1740,12 @@ export function createCotonouBuildingMesh(
   const stand = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, 2.4), standMat);
   stand.position.set(width * 0.25, height + 0.2, depth * 0.2);
   group.add(stand);
+
+  // Water tank PVC piping & valve
+  const pvcMat = new THREE.MeshStandardMaterial({ color: 0x38BDF8, roughness: 0.4 });
+  const tankPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6, 8), pvcMat);
+  tankPipe.position.set(width * 0.25 + 0.9, height + 0.8, depth * 0.2);
+  group.add(tankPipe);
 
   // Rooftop Satellite TV Dish (Canal+ / DStv typical in Cotonou)
   const dishMat = new THREE.MeshStandardMaterial({ color: 0xD4D4D8, metalness: 0.7, roughness: 0.4 });
@@ -1621,11 +1759,19 @@ export function createCotonouBuildingMesh(
   dish.position.set(-width * 0.25, height + 1.3, -depth * 0.2);
   group.add(dish);
 
-  // Rooftop Radio / Cellular Antenna Mast
+  // Rooftop Radio / Cellular Antenna Mast with flashing beacon light
   const antennaGeo = new THREE.CylinderGeometry(0.03, 0.06, 5.0, 6);
   const antenna = new THREE.Mesh(antennaGeo, dishMat);
   antenna.position.set(0, height + 2.5, 0);
   group.add(antenna);
+
+  // Red beacon on top of antenna
+  const beacon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xEF4444 })
+  );
+  beacon.position.set(0, height + 5.0, 0);
+  group.add(beacon);
 
   return group;
 }
