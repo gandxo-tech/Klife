@@ -28,6 +28,7 @@ import {
   applyCrimeWanted,
   calculateDistance,
   checkCircleCollision,
+  checkObstacleCollision,
   checkStageCompletion,
   stepVehiclePhysics,
   updateWantedState,
@@ -108,6 +109,7 @@ export class GameEngine {
   private vehicleMeshes = new Map<string, THREE.Group>();
   private policeLights: { red: THREE.PointLight; blue: THREE.PointLight }[] = [];
   private trafficSystem!: TrafficSystem;
+  private waterMesh: THREE.Mesh | null = null;
 
   private pedestrians: Pedestrian[] = [];
   private pedestrianMeshes = new Map<string, THREE.Group>();
@@ -224,8 +226,9 @@ export class GameEngine {
     this.scene.add(this.bedroomScene.group);
 
     // Build Cotonou World
-    const { obstacles } = buildCotonouCity(this.scene);
+    const { obstacles, waterMesh } = buildCotonouCity(this.scene);
     this.obstacles = obstacles;
+    this.waterMesh = waterMesh;
 
     // Build Player Mesh
     this.rebuildPlayerMesh();
@@ -487,7 +490,7 @@ export class GameEngine {
       { type: 'taxi505', x: -8, z: 30, rot: 0 },
       { type: 'taxi505', x: -80, z: 10, rot: Math.PI / 2 },
       { type: 'taxi505', x: 40, z: -80, rot: Math.PI },
-      { type: 'gwagon', x: 8, z: 135, rot: 0 },
+      { type: 'gwagon', x: 48, z: 146, rot: 0 },
       { type: 'gwagon', x: 60, z: 70, rot: Math.PI / 2 },
       { type: 'police', x: -30, z: -60, rot: 0, isPolice: true },
       { type: 'police', x: 70, z: 110, rot: Math.PI, isPolice: true },
@@ -605,8 +608,10 @@ export class GameEngine {
     this.gameState = 'playing';
     this.isIndoorBedroom = true;
     this.player.x = 0;
+    this.player.y = 200;
     this.player.z = 0;
     this.player.rotationY = Math.PI;
+    this.playerMeshGroup.position.set(0, 200, 0);
 
     this.callbacks.onNotification(
       'Spawné dans ta chambre à Sikè-Fictif. Approche du miroir pour te relooker ou de la porte pour sortir !'
@@ -625,6 +630,7 @@ export class GameEngine {
     this.isIndoorBedroom = false;
     this.scene.remove(this.bedroomScene.group);
     this.player.x = -50;
+    this.player.y = 0;
     this.player.z = -105;
     this.player.rotationY = 0;
     this.rebuildPlayerMesh();
@@ -789,6 +795,11 @@ export class GameEngine {
       this.updateSimulation(dt);
     }
 
+    if (this.waterMesh) {
+      const elapsed = this.clock.getElapsedTime();
+      this.waterMesh.position.y = 0.08 + Math.sin(elapsed * 1.5) * 0.035;
+    }
+
     this.renderer.render(this.scene, this.camera);
 
     if (this.isSoftwareGl) {
@@ -853,7 +864,7 @@ export class GameEngine {
         this.player.z = nextZ;
       }
 
-      this.playerMeshGroup.position.set(this.player.x, 0, this.player.z);
+      this.playerMeshGroup.position.set(this.player.x, 200, this.player.z);
       this.playerMeshGroup.rotation.y = this.player.rotationY;
 
       // Check bedroom triggers tip
@@ -871,8 +882,12 @@ export class GameEngine {
       }
 
       // Camera inside bedroom
-      this.camera.position.set(this.player.x - Math.sin(this.player.rotationY) * 3.2, 2.2, this.player.z - Math.cos(this.player.rotationY) * 3.2);
-      this.camera.lookAt(this.player.x, 1.3, this.player.z);
+      this.camera.position.set(
+        this.player.x - Math.sin(this.player.rotationY) * 2.5,
+        201.7,
+        this.player.z - Math.cos(this.player.rotationY) * 2.5
+      );
+      this.camera.lookAt(this.player.x, 201.2, this.player.z);
     } else {
       // Outdoor City Movement
       const isDriving = !!this.player.currentVehicleId;
@@ -912,18 +927,25 @@ export class GameEngine {
         const nextZ = currentVeh.z + physics.deltaZ;
         let collided = false;
 
-        for (const obs of this.obstacles) {
-          if (checkCircleCollision(nextX, nextZ, currentVeh.config.width * 0.6, obs.x, obs.z, obs.radius)) {
-            collided = true;
-            currentVeh.speed = -currentVeh.speed * 0.4;
-            sound.playCrash(Math.abs(physics.speed) / 20);
-            break;
+        // Shoreline water boundary: prevent sinking into the deep ocean
+        if (nextX < -242) {
+          collided = true;
+          currentVeh.speed = -currentVeh.speed * 0.5;
+          sound.playCrash(0.4);
+        } else {
+          for (const obs of this.obstacles) {
+            if (checkObstacleCollision(nextX, nextZ, currentVeh.config.width * 0.52, obs)) {
+              collided = true;
+              currentVeh.speed = -currentVeh.speed * 0.4;
+              sound.playCrash(Math.abs(physics.speed) / 20);
+              break;
+            }
           }
         }
 
         if (!collided) {
-          currentVeh.x = nextX;
-          currentVeh.z = nextZ;
+          currentVeh.x = Math.max(-242, Math.min(290, nextX));
+          currentVeh.z = Math.max(-290, Math.min(290, nextZ));
         }
 
         this.player.x = currentVeh.x;
@@ -948,18 +970,24 @@ export class GameEngine {
         if (moveForward !== 0) {
           const deltaX = Math.sin(this.player.rotationY) * moveForward * walkSpeed * dt;
           const deltaZ = Math.cos(this.player.rotationY) * moveForward * walkSpeed * dt;
+          const targetX = this.player.x + deltaX;
+          const targetZ = this.player.z + deltaZ;
 
           let canMove = true;
-          for (const obs of this.obstacles) {
-            if (checkCircleCollision(this.player.x + deltaX, this.player.z + deltaZ, 0.8, obs.x, obs.z, obs.radius)) {
-              canMove = false;
-              break;
+          if (targetX < -242) {
+            canMove = false;
+          } else {
+            for (const obs of this.obstacles) {
+              if (checkObstacleCollision(targetX, targetZ, 0.75, obs)) {
+                canMove = false;
+                break;
+              }
             }
           }
 
           if (canMove) {
-            this.player.x += deltaX;
-            this.player.z += deltaZ;
+            this.player.x = Math.max(-242, Math.min(290, targetX));
+            this.player.z = Math.max(-290, Math.min(290, targetZ));
           }
 
           this.playerAnim.walkTime += dt * (isSprinting ? 14 : 9);
@@ -1088,7 +1116,8 @@ export class GameEngine {
       const dx = obs.x - veh.x;
       const dz = obs.z - veh.z;
       const dist = Math.sqrt(dx * dx + dz * dz);
-      const minDistThreshold = obs.radius + 3.2;
+      const obsRadius = obs.type === 'box' ? Math.max(obs.halfWidth, obs.halfDepth) : obs.radius;
+      const minDistThreshold = obsRadius + 3.2;
       if (dist < minDistThreshold && dist > 0.1) {
         const dot = (dx * forwardDx + dz * forwardDz) / dist;
         if (dot > 0.6) return true;
@@ -1179,7 +1208,7 @@ export class GameEngine {
 
           let hitObstacle = false;
           for (const obs of this.obstacles) {
-            if (checkCircleCollision(veh.x + deltaX, veh.z + deltaZ, veh.config.width * 0.6, obs.x, obs.z, obs.radius)) {
+            if (checkObstacleCollision(veh.x + deltaX, veh.z + deltaZ, veh.config.width * 0.55, obs)) {
               hitObstacle = true;
               break;
             }

@@ -54,6 +54,7 @@ export class BedroomScene {
       },
     ];
 
+    this.group.position.set(0, 200, 0);
     this.buildRoom();
   }
 
@@ -63,69 +64,72 @@ export class BedroomScene {
     const roomHeight = 3.2;
     const roomDepth = 7.0;
 
-    // 1. Tiled Floor with Patterned Carpet
-    const floorGeo = new THREE.PlaneGeometry(roomWidth, roomDepth);
-    floorGeo.rotateX(-Math.PI / 2);
+    // 1. Solid Tiled Floor (Warm Terracotta Tiles)
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0xCBD5E1, // Light ceramic tile
-      roughness: 0.25,
+      color: 0x9A3412, // Rich terracotta floor tile
+      roughness: 0.55,
       metalness: 0.1,
     });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, 0.2, roomDepth), floorMat);
+    floor.position.set(0, -0.1, 0);
     floor.receiveShadow = true;
     this.group.add(floor);
 
-    // African Wax Pattern Carpet
-    const rugGeo = new THREE.PlaneGeometry(3.5, 2.5);
-    rugGeo.rotateX(-Math.PI / 2);
+    // African Wax Pattern Carpet (Solid 3D rug)
     const rugMat = new THREE.MeshStandardMaterial({
       map: createCustomOutfitTexture('wax', '#D97706'),
-      roughness: 0.8,
+      roughness: 0.75,
     });
-    const rug = new THREE.Mesh(rugGeo, rugMat);
-    rug.position.set(0, 0.01, 0);
+    const rug = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.04, 2.6), rugMat);
+    rug.position.set(0, 0.02, 0);
     rug.receiveShadow = true;
     this.group.add(rug);
 
-    // 2. Walls (Warm Terracotta / Sikè Beige)
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0xF1F5F9, roughness: 0.8 });
+    // 2. Solid Walls (Warm Terracotta Accent & Pale Sand Plaster)
+    const backWallMat = new THREE.MeshStandardMaterial({ color: 0xB45309, roughness: 0.8 }); // Terracotta
+    const sideWallMat = new THREE.MeshStandardMaterial({ color: 0xFDE68A, roughness: 0.85 }); // Warm sand
+    const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xFFFBEB, roughness: 0.9 });
 
     // Back Wall (z = -3.5)
-    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomHeight), wallMat);
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, roomHeight, 0.2), backWallMat);
     backWall.position.set(0, roomHeight / 2, -roomDepth / 2);
     this.group.add(backWall);
 
     // Front Wall with Doorway cutout (z = 3.5)
-    const frontWallL = new THREE.Mesh(new THREE.PlaneGeometry(2.5, roomHeight), wallMat);
+    const frontWallL = new THREE.Mesh(new THREE.BoxGeometry(2.5, roomHeight, 0.2), sideWallMat);
     frontWallL.position.set(-2.25, roomHeight / 2, roomDepth / 2);
-    frontWallL.rotateY(Math.PI);
 
-    const frontWallR = new THREE.Mesh(new THREE.PlaneGeometry(2.5, roomHeight), wallMat);
+    const frontWallR = new THREE.Mesh(new THREE.BoxGeometry(2.5, roomHeight, 0.2), sideWallMat);
     frontWallR.position.set(2.25, roomHeight / 2, roomDepth / 2);
-    frontWallR.rotateY(Math.PI);
 
-    const frontWallTop = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 0.8), wallMat);
+    const frontWallTop = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.8, 0.2), sideWallMat);
     frontWallTop.position.set(0, roomHeight - 0.4, roomDepth / 2);
-    frontWallTop.rotateY(Math.PI);
 
     this.group.add(frontWallL, frontWallR, frontWallTop);
 
     // Left Wall (x = -3.5)
-    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(roomDepth, roomHeight), wallMat);
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, roomHeight, roomDepth), sideWallMat);
     leftWall.position.set(-roomWidth / 2, roomHeight / 2, 0);
-    leftWall.rotateY(Math.PI / 2);
     this.group.add(leftWall);
 
     // Right Wall (x = 3.5)
-    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(roomDepth, roomHeight), wallMat);
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, roomHeight, roomDepth), sideWallMat);
     rightWall.position.set(roomWidth / 2, roomHeight / 2, 0);
-    rightWall.rotateY(-Math.PI / 2);
     this.group.add(rightWall);
 
+    // Mahogany Baseboard Trim (Plinthes de sol)
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x451A03, roughness: 0.6 });
+    const bBack = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, 0.2, 0.08), baseMat);
+    bBack.position.set(0, 0.1, -roomDepth / 2 + 0.1);
+    const bLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, roomDepth), baseMat);
+    bLeft.position.set(-roomWidth / 2 + 0.1, 0.1, 0);
+    const bRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, roomDepth), baseMat);
+    bRight.position.set(roomWidth / 2 - 0.1, 0.1, 0);
+    this.group.add(bBack, bLeft, bRight);
+
     // Ceiling
-    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), wallMat);
-    ceiling.position.set(0, roomHeight, 0);
-    ceiling.rotateX(Math.PI / 2);
+    const ceiling = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, 0.2, roomDepth), ceilingMat);
+    ceiling.position.set(0, roomHeight + 0.1, 0);
     this.group.add(ceiling);
 
     // 3. Furniture: Bed with Wax Blanket
@@ -275,12 +279,11 @@ export class BedroomScene {
     this.group.add(doorGroup);
 
     // 8. Ceiling Light
-    const roomLight = new THREE.PointLight(0xFFFBEB, 2.2, 12);
-    roomLight.position.set(0, 2.9, 0);
-    roomLight.castShadow = true;
+    const roomLight = new THREE.PointLight(0xFFFBEB, 3.2, 16);
+    roomLight.position.set(0, 2.8, 0);
     this.group.add(roomLight);
 
-    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xFFF7ED, 1.4);
     this.group.add(ambientLight);
   }
 }

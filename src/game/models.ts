@@ -839,38 +839,110 @@ export function createCharacterMesh(
 
 /**
  * 7. Monument de l'Étoile Rouge (Authentic Roundabout Architecture)
+ * Cotonou's central revolutionary roundabout monument with 5 radial pathways,
+ * commemorative bronze reliefs, central obelisk, and glowing ruby star.
  */
 export function createEtoileRougeMesh(): THREE.Group {
   const group = new THREE.Group();
 
-  // Tier 1 Base Plinth (Granite finish)
-  const plinthGeo = new THREE.CylinderGeometry(14, 15, 1.2, 32);
+  // Tier 1 Base Plinth (Polished Granite finish with red brick trim)
+  const plinthGeo = new THREE.CylinderGeometry(14.5, 15.5, 1.2, 36);
   const plinthMat = new THREE.MeshStandardMaterial({ color: 0xE2E8F0, roughness: 0.65 });
   const plinth = new THREE.Mesh(plinthGeo, plinthMat);
   plinth.position.y = 0.6;
   plinth.receiveShadow = true;
   group.add(plinth);
 
-  // Tier 2 Raised Terrace
-  const terraceGeo = new THREE.CylinderGeometry(8, 8.5, 1.0, 24);
+  // Red laterite circular ring curb
+  const redRingGeo = new THREE.RingGeometry(13.8, 15.2, 36);
+  redRingGeo.rotateX(-Math.PI / 2);
+  const redRingMat = new THREE.MeshStandardMaterial({ color: 0xB91C1C, roughness: 0.8 });
+  const redRing = new THREE.Mesh(redRingGeo, redRingMat);
+  redRing.position.y = 1.22;
+  group.add(redRing);
+
+  // 5 Radial paved pathways extending outwards from central podium
+  const pathMat = new THREE.MeshStandardMaterial({ color: 0xF1F5F9, roughness: 0.6 });
+  for (let i = 0; i < 5; i++) {
+    const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+    const pathGeo = new THREE.PlaneGeometry(2.4, 6.5);
+    pathGeo.rotateX(-Math.PI / 2);
+    const pathMesh = new THREE.Mesh(pathGeo, pathMat);
+    pathMesh.rotation.y = -angle;
+    pathMesh.position.set(Math.cos(angle) * 9.8, 1.23, Math.sin(angle) * 9.8);
+    group.add(pathMesh);
+  }
+
+  // Tier 2 Raised Terrace (Pedestal steps)
+  const terraceGeo = new THREE.CylinderGeometry(8.2, 8.8, 1.0, 28);
   const terraceMat = new THREE.MeshStandardMaterial({ color: 0x94A3B8, roughness: 0.5 });
   const terrace = new THREE.Mesh(terraceGeo, terraceMat);
   terrace.position.y = 1.7;
+  terrace.receiveShadow = true;
   group.add(terrace);
 
-  // Towering Central Obelisk Pillar
-  const towerGeo = new THREE.CylinderGeometry(1.6, 2.4, 17, 8);
-  const towerMat = new THREE.MeshStandardMaterial({ color: 0xF8FAFC, roughness: 0.3, metalness: 0.2 });
+  // Commemorative bronze relief pillars around base
+  const bronzeMat = new THREE.MeshStandardMaterial({ color: 0xB45309, metalness: 0.8, roughness: 0.3 });
+  for (let i = 0; i < 4; i++) {
+    const ang = (i / 4) * Math.PI * 2;
+    const plaquePillar = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.2, 0.4), bronzeMat);
+    plaquePillar.position.set(Math.cos(ang) * 6.5, 2.8, Math.sin(ang) * 6.5);
+    plaquePillar.rotation.y = -ang;
+    plaquePillar.castShadow = true;
+    group.add(plaquePillar);
+  }
+
+  // Towering Central Obelisk Pillar (fluted hexagonal tapering column)
+  const towerGeo = new THREE.CylinderGeometry(1.6, 2.5, 17, 8);
+  const towerMat = new THREE.MeshStandardMaterial({
+    color: 0xF8FAFC,
+    roughness: 0.3,
+    metalness: 0.2,
+  });
   const tower = new THREE.Mesh(towerGeo, towerMat);
   tower.position.y = 10.5;
   tower.castShadow = true;
   group.add(tower);
 
+  // Bronze ring band around mid-tower
+  const bandGeo = new THREE.CylinderGeometry(2.05, 2.05, 0.8, 16);
+  const band = new THREE.Mesh(bandGeo, bronzeMat);
+  band.position.y = 11.0;
+  group.add(band);
+
+  // Inscription Plaque Banner on North & South sides of base
+  const plaqueCanvas = document.createElement('canvas');
+  plaqueCanvas.width = 256;
+  plaqueCanvas.height = 64;
+  const pCtx = plaqueCanvas.getContext('2d')!;
+  pCtx.fillStyle = '#B45309';
+  pCtx.fillRect(0, 0, 256, 64);
+  pCtx.fillStyle = '#FEF08A';
+  pCtx.font = 'bold 15px sans-serif';
+  pCtx.textAlign = 'center';
+  pCtx.textBaseline = 'middle';
+  pCtx.fillText("PLACE DE L'ÉTOILE ROUGE", 128, 22);
+  pCtx.font = '12px sans-serif';
+  pCtx.fillText('RÉPUBLIQUE DU BÉNIN', 128, 44);
+
+  const plaqueTex = new THREE.CanvasTexture(plaqueCanvas);
+  plaqueTex.colorSpace = THREE.SRGBColorSpace;
+  const plaqueMat = new THREE.MeshBasicMaterial({ map: plaqueTex });
+
+  const plaqueN = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.0), plaqueMat);
+  plaqueN.position.set(0, 2.2, 8.25);
+  group.add(plaqueN);
+
+  const plaqueS = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.0), plaqueMat);
+  plaqueS.position.set(0, 2.2, -8.25);
+  plaqueS.rotation.y = Math.PI;
+  group.add(plaqueS);
+
   // Majestic Red Five-Pointed Star at Summit
   const starShape = new THREE.Shape();
   const points = 5;
-  const outerR = 3.4;
-  const innerR = 1.45;
+  const outerR = 3.6;
+  const innerR = 1.55;
   for (let i = 0; i < points * 2; i++) {
     const r = i % 2 === 0 ? outerR : innerR;
     const a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
@@ -881,70 +953,151 @@ export function createEtoileRougeMesh(): THREE.Group {
   }
   starShape.closePath();
 
-  const starExtrudeSettings = { depth: 0.85, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.12 };
+  const starExtrudeSettings = { depth: 0.9, bevelEnabled: true, bevelThickness: 0.3, bevelSize: 0.15 };
   const starGeo = new THREE.ExtrudeGeometry(starShape, starExtrudeSettings);
   starGeo.center();
   const starMat = new THREE.MeshStandardMaterial({
     color: 0xDC2626, // Luminous revolutionary red
-    emissive: 0x991B1B,
-    emissiveIntensity: 0.5,
+    emissive: 0xB91C1C,
+    emissiveIntensity: 0.6,
     roughness: 0.2,
     metalness: 0.4,
   });
   const star = new THREE.Mesh(starGeo, starMat);
-  star.position.set(0, 20.2, 0);
+  star.position.set(0, 20.4, 0);
   star.castShadow = true;
   group.add(star);
+
+  // Star Point Light (Subtle ruby red beacon glow)
+  const starLight = new THREE.PointLight(0xEF4444, 2.0, 25);
+  starLight.position.set(0, 21.0, 0);
+  group.add(starLight);
 
   return group;
 }
 
 /**
  * 8. Monument de l'Amazone (Majestic Bronze Dahomey Warrior Statue)
+ * Modeled after the 30-meter high Queen Tassi Hangbe bronze statue on Boulevard de la Marina.
  */
 export function createAmazoneMonumentMesh(): THREE.Group {
   const group = new THREE.Group();
 
-  // Granite Pedestal with ceremonial steps
-  const pedestalGeo = new THREE.BoxGeometry(6.2, 4.2, 6.2);
-  const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.5, metalness: 0.2 });
-  const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
-  pedestal.position.y = 2.1;
+  // Tiered Granite Pedestal with ceremonial steps
+  const baseStepGeo = new THREE.BoxGeometry(11.0, 0.8, 11.0);
+  const graniteMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.5, metalness: 0.2 });
+  const baseStep = new THREE.Mesh(baseStepGeo, graniteMat);
+  baseStep.position.y = 0.4;
+  baseStep.receiveShadow = true;
+  group.add(baseStep);
+
+  const midStep = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.0, 8.5), graniteMat);
+  midStep.position.y = 1.3;
+  midStep.receiveShadow = true;
+  group.add(midStep);
+
+  const pedestalGeo = new THREE.BoxGeometry(6.4, 4.4, 6.4);
+  const pedestal = new THREE.Mesh(pedestalGeo, graniteMat);
+  pedestal.position.y = 4.0;
   pedestal.castShadow = true;
   pedestal.receiveShadow = true;
   group.add(pedestal);
 
+  // Commemorative bronze inscription
+  const amzCanvas = document.createElement('canvas');
+  amzCanvas.width = 512;
+  amzCanvas.height = 96;
+  const aCtx = amzCanvas.getContext('2d')!;
+  aCtx.fillStyle = '#0F172A';
+  aCtx.fillRect(0, 0, 512, 96);
+  aCtx.strokeStyle = '#D97706';
+  aCtx.lineWidth = 4;
+  aCtx.strokeRect(6, 6, 500, 84);
+  aCtx.fillStyle = '#FBBF24';
+  aCtx.font = 'bold 26px sans-serif';
+  aCtx.textAlign = 'center';
+  aCtx.textBaseline = 'middle';
+  aCtx.fillText("MONUMENT DE L'AMAZONE", 256, 36);
+  aCtx.font = '16px sans-serif';
+  aCtx.fillStyle = '#E2E8F0';
+  aCtx.fillText('HOMMAGE AUX BRAVES FEMMES DU BÉNIN • MINO', 256, 66);
+
+  const amzTex = new THREE.CanvasTexture(amzCanvas);
+  amzTex.colorSpace = THREE.SRGBColorSpace;
+  const amzSign = new THREE.Mesh(
+    new THREE.PlaneGeometry(5.2, 1.1),
+    new THREE.MeshBasicMaterial({ map: amzTex })
+  );
+  amzSign.position.set(0, 3.8, 3.25);
+  group.add(amzSign);
+
   // Bronze Amazon Warrior Silhouette
   const bronzeMat = new THREE.MeshStandardMaterial({
-    color: 0x854D0E, // Dahomey authentic cast bronze
+    color: 0x92400E, // Dahomey authentic cast bronze
     roughness: 0.35,
     metalness: 0.85,
   });
 
   // Torso & Warrior dress
-  const statueTorso = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.8, 6.5, 16), bronzeMat);
-  statueTorso.position.y = 7.4;
+  const statueTorso = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.9, 6.8, 16), bronzeMat);
+  statueTorso.position.y = 9.6;
   statueTorso.castShadow = true;
   group.add(statueTorso);
 
+  // Dahomey royal sash across chest
+  const sashGeo = new THREE.TorusGeometry(1.65, 0.16, 8, 16);
+  sashGeo.rotateX(Math.PI / 3);
+  const sash = new THREE.Mesh(sashGeo, bronzeMat);
+  sash.position.y = 10.2;
+  group.add(sash);
+
   // Head with royal braided crown / turban
-  const statueHead = new THREE.Mesh(new THREE.SphereGeometry(1.05, 16, 16), bronzeMat);
-  statueHead.position.y = 11.4;
+  const statueHead = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 16), bronzeMat);
+  statueHead.position.y = 13.8;
   group.add(statueHead);
 
-  // Dahomey Amazon Spear
-  const spearGeo = new THREE.CylinderGeometry(0.08, 0.08, 14.5, 10);
+  // Crown headdress
+  const crownGeo = new THREE.CylinderGeometry(1.15, 0.95, 0.8, 14);
+  const crown = new THREE.Mesh(crownGeo, bronzeMat);
+  crown.position.y = 14.7;
+  group.add(crown);
+
+  // Dahomey Amazon Spear (held high vertically)
+  const spearGeo = new THREE.CylinderGeometry(0.09, 0.09, 15.5, 10);
   const spear = new THREE.Mesh(spearGeo, bronzeMat);
-  spear.position.set(1.4, 9.8, 0.5);
-  spear.rotateZ(-0.25);
+  spear.position.set(1.5, 12.0, 0.6);
+  spear.rotateZ(-0.15);
   spear.castShadow = true;
   group.add(spear);
 
-  // Dahomey Royal Shield
-  const shieldGeo = new THREE.BoxGeometry(0.2, 3.6, 2.2);
+  // Spear head blade
+  const bladeGeo = new THREE.ConeGeometry(0.3, 1.8, 4);
+  const blade = new THREE.Mesh(bladeGeo, bronzeMat);
+  blade.position.set(1.5 + Math.sin(0.15) * 7.5, 12.0 + Math.cos(0.15) * 7.5, 0.6);
+  blade.rotateZ(-0.15);
+  group.add(blade);
+
+  // Dahomey Royal Shield (embossed warrior crest)
+  const shieldGeo = new THREE.BoxGeometry(0.24, 4.2, 2.5);
   const shield = new THREE.Mesh(shieldGeo, bronzeMat);
-  shield.position.set(-1.4, 7.6, 0.4);
+  shield.position.set(-1.5, 9.8, 0.5);
+  shield.castShadow = true;
   group.add(shield);
+
+  // 4 Upward floodlights illuminating the statue from corners
+  [-3.8, 3.8].forEach((fx) => {
+    [-3.8, 3.8].forEach((fz) => {
+      const lampGeo = new THREE.BoxGeometry(0.6, 0.3, 0.6);
+      const lampMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 });
+      const lamp = new THREE.Mesh(lampGeo, lampMat);
+      lamp.position.set(fx, 0.95, fz);
+      group.add(lamp);
+
+      const spot = new THREE.PointLight(0xFDE68A, 1.5, 18);
+      spot.position.set(fx, 1.2, fz);
+      group.add(spot);
+    });
+  });
 
   return group;
 }
@@ -1328,3 +1481,439 @@ export function createGarageMesh(titleText: string): THREE.Group {
 
   return group;
 }
+
+/**
+ * 16. Authentic Multi-Story Cotonou Building
+ * Features textured walls, ground-floor boutiques with awnings or metal roller gates,
+ * window grids with sills & sun visors, rooftop terrace with blue water tank (Citerne Rotoplas),
+ * satellite TV dish, and radio antenna mast.
+ */
+export function createCotonouBuildingMesh(
+  width: number,
+  height: number,
+  depth: number,
+  wallColorHex: number = 0xF1F5F9,
+  signTexture?: THREE.Texture,
+  hasAwning: boolean = true
+): THREE.Group {
+  const group = new THREE.Group();
+
+  // Main Concrete Stucco Body
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: wallColorHex,
+    roughness: 0.7,
+    metalness: 0.1,
+  });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), wallMat);
+  body.position.y = height / 2;
+  body.castShadow = true;
+  body.receiveShadow = true;
+  group.add(body);
+
+  // Concrete Base Plinth / Sidewalk curb
+  const plinthMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(width + 0.8, 0.4, depth + 0.8), plinthMat);
+  plinth.position.y = 0.2;
+  plinth.receiveShadow = true;
+  group.add(plinth);
+
+  // Ground floor commercial shopfront facade
+  const shopMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.3, metalness: 0.5 });
+  const shopWidth = Math.min(width * 0.75, width - 4);
+  const shopDoor = new THREE.Mesh(new THREE.PlaneGeometry(shopWidth, 3.2), shopMat);
+  shopDoor.position.set(0, 1.8, depth / 2 + 0.05);
+  group.add(shopDoor);
+
+  // Commercial banner sign
+  if (signTexture) {
+    const signBoard = new THREE.Mesh(
+      new THREE.PlaneGeometry(shopWidth * 0.9, 2.0),
+      new THREE.MeshBasicMaterial({ map: signTexture })
+    );
+    signBoard.position.set(0, 3.8, depth / 2 + 0.1);
+    group.add(signBoard);
+  }
+
+  // Shop entrance awning (Colorful African striped canopy or metal overhang)
+  if (hasAwning) {
+    const awningMat = new THREE.MeshStandardMaterial({
+      color: 0xE65100, // Vibrant orange
+      roughness: 0.6,
+      side: THREE.DoubleSide,
+    });
+    const awning = new THREE.Mesh(new THREE.BoxGeometry(shopWidth + 1.0, 0.15, 2.0), awningMat);
+    awning.position.set(0, 3.4, depth / 2 + 1.0);
+    awning.rotateX(-0.18);
+    awning.castShadow = true;
+    group.add(awning);
+  }
+
+  // Multi-tier window rows on upper floors
+  const windowMat = new THREE.MeshStandardMaterial({
+    color: 0x0F172A,
+    roughness: 0.1,
+    metalness: 0.9,
+  });
+  const visorMat = new THREE.MeshStandardMaterial({ color: 0x94A3B8, roughness: 0.5 });
+
+  const numFloors = Math.max(1, Math.floor(height / 4) - 1);
+  const windowsPerRow = Math.max(2, Math.floor(width / 5));
+
+  for (let f = 1; f <= numFloors; f++) {
+    const floorY = 4.0 + f * 3.4;
+    if (floorY > height - 2.5) break;
+
+    for (let w = 0; w < windowsPerRow; w++) {
+      const wx = -width / 2 + ((w + 1) * width) / (windowsPerRow + 1);
+
+      // Front window
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.8), windowMat);
+      win.position.set(wx, floorY, depth / 2 + 0.05);
+      group.add(win);
+
+      // Concrete sun visor (brise-soleil)
+      const visor = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.12, 0.6), visorMat);
+      visor.position.set(wx, floorY + 1.0, depth / 2 + 0.35);
+      group.add(visor);
+
+      // Back window
+      const winB = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.8), windowMat);
+      winB.position.set(wx, floorY, -depth / 2 - 0.05);
+      winB.rotateY(Math.PI);
+      group.add(winB);
+    }
+  }
+
+  // Rooftop Parapet Wall (Safety rim around terrace)
+  const parapetMat = new THREE.MeshStandardMaterial({ color: wallColorHex, roughness: 0.8 });
+  const pFront = new THREE.Mesh(new THREE.BoxGeometry(width, 1.0, 0.4), parapetMat);
+  pFront.position.set(0, height + 0.5, depth / 2 - 0.2);
+  const pBack = new THREE.Mesh(new THREE.BoxGeometry(width, 1.0, 0.4), parapetMat);
+  pBack.position.set(0, height + 0.5, -depth / 2 + 0.2);
+  const pLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, depth), parapetMat);
+  pLeft.position.set(-width / 2 + 0.2, height + 0.5, 0);
+  const pRight = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, depth), parapetMat);
+  pRight.position.set(width / 2 - 0.2, height + 0.5, 0);
+  group.add(pFront, pBack, pLeft, pRight);
+
+  // Rooftop Water Tank (Iconic blue "Citerne Rotoplas 1000L" seen everywhere in Cotonou)
+  const tankMat = new THREE.MeshStandardMaterial({ color: 0x0284C7, roughness: 0.3, metalness: 0.2 });
+  const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 2.2, 16), tankMat);
+  tank.position.set(width * 0.25, height + 1.2, depth * 0.2);
+  tank.castShadow = true;
+  group.add(tank);
+
+  // Water tank concrete stand
+  const standMat = new THREE.MeshStandardMaterial({ color: 0x64748B, roughness: 0.9 });
+  const stand = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, 2.4), standMat);
+  stand.position.set(width * 0.25, height + 0.2, depth * 0.2);
+  group.add(stand);
+
+  // Rooftop Satellite TV Dish (Canal+ / DStv typical in Cotonou)
+  const dishMat = new THREE.MeshStandardMaterial({ color: 0xD4D4D8, metalness: 0.7, roughness: 0.4 });
+  const dishPole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 6), dishMat);
+  dishPole.position.set(-width * 0.25, height + 0.7, -depth * 0.2);
+  group.add(dishPole);
+
+  const dishGeo = new THREE.SphereGeometry(0.65, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2.8);
+  dishGeo.rotateX(Math.PI / 1.4);
+  const dish = new THREE.Mesh(dishGeo, dishMat);
+  dish.position.set(-width * 0.25, height + 1.3, -depth * 0.2);
+  group.add(dish);
+
+  // Rooftop Radio / Cellular Antenna Mast
+  const antennaGeo = new THREE.CylinderGeometry(0.03, 0.06, 5.0, 6);
+  const antenna = new THREE.Mesh(antennaGeo, dishMat);
+  antenna.position.set(0, height + 2.5, 0);
+  group.add(antenna);
+
+  return group;
+}
+
+/**
+ * 17. Cathédrale Notre-Dame-de-Miséricorde de Cotonou
+ * Cotonou's iconic landmark cathedral with famous alternating red and white ceramic stripes,
+ * twin towers, and central rosette.
+ */
+export function createCathedraleCotonouMesh(): THREE.Group {
+  const group = new THREE.Group();
+
+  // Characteristic red ceramic and white stone stripe texture
+  const stripeCanvas = document.createElement('canvas');
+  stripeCanvas.width = 64;
+  stripeCanvas.height = 64;
+  const sCtx = stripeCanvas.getContext('2d')!;
+  sCtx.fillStyle = '#B91C1C'; // Red brick
+  sCtx.fillRect(0, 0, 64, 32);
+  sCtx.fillStyle = '#F8FAFC'; // White stone
+  sCtx.fillRect(0, 32, 64, 32);
+
+  const stripeTex = new THREE.CanvasTexture(stripeCanvas);
+  stripeTex.wrapS = THREE.RepeatWrapping;
+  stripeTex.wrapT = THREE.RepeatWrapping;
+  stripeTex.repeat.set(4, 12);
+  stripeTex.colorSpace = THREE.SRGBColorSpace;
+
+  const cathMat = new THREE.MeshStandardMaterial({
+    map: stripeTex,
+    roughness: 0.5,
+  });
+
+  // Central Nave
+  const nave = new THREE.Mesh(new THREE.BoxGeometry(18, 16, 28), cathMat);
+  nave.position.y = 8;
+  nave.castShadow = true;
+  nave.receiveShadow = true;
+  group.add(nave);
+
+  // Gable pitched roof
+  const roofGeo = new THREE.ConeGeometry(13.5, 7.0, 4);
+  roofGeo.rotateY(Math.PI / 4);
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x991B1B, roughness: 0.4 });
+  const roof = new THREE.Mesh(roofGeo, roofMat);
+  roof.position.set(0, 19.5, 0);
+  roof.scale.set(1.0, 1.0, 2.1);
+  roof.castShadow = true;
+  group.add(roof);
+
+  // Twin Front Towers (Left & Right)
+  [-9.5, 9.5].forEach((tx) => {
+    const tower = new THREE.Mesh(new THREE.BoxGeometry(6.5, 26, 6.5), cathMat);
+    tower.position.set(tx, 13, 13);
+    tower.castShadow = true;
+    group.add(tower);
+
+    // Tower Spire Pyramids
+    const spireGeo = new THREE.ConeGeometry(4.2, 9.0, 4);
+    spireGeo.rotateY(Math.PI / 4);
+    const spire = new THREE.Mesh(spireGeo, roofMat);
+    spire.position.set(tx, 30.5, 13);
+    spire.castShadow = true;
+    group.add(spire);
+
+    // Cross finials atop towers
+    const crossMat = new THREE.MeshStandardMaterial({ color: 0xFBBF24, metalness: 0.9, roughness: 0.2 });
+    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.8, 0.15), crossMat);
+    crossV.position.set(tx, 35.8, 13);
+    const crossH = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.15, 0.15), crossMat);
+    crossH.position.set(tx, 36.2, 13);
+    group.add(crossV, crossH);
+  });
+
+  // Gothic Arched Portal Entrance
+  const portalMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.7 });
+  const portal = new THREE.Mesh(new THREE.BoxGeometry(5.2, 6.5, 1.0), portalMat);
+  portal.position.set(0, 3.25, 14.5);
+  group.add(portal);
+
+  // Stained Glass Rosette Window
+  const roseGeo = new THREE.CircleGeometry(2.4, 24);
+  const roseMat = new THREE.MeshStandardMaterial({
+    color: 0x0284C7,
+    emissive: 0x0369A1,
+    emissiveIntensity: 0.4,
+    roughness: 0.2,
+  });
+  const rose = new THREE.Mesh(roseGeo, roseMat);
+  rose.position.set(0, 11.5, 14.1);
+  group.add(rose);
+
+  return group;
+}
+
+/**
+ * 18. Fidjrossè Beach Bar Paillote (Chez Tata Tundé Plage)
+ * Thatched palm roof, rustic timber stilts, Ganvié beer bar, and wooden seating.
+ */
+export function createBeachPailloteMesh(): THREE.Group {
+  const group = new THREE.Group();
+
+  // Raised wooden boardwalk floor
+  const deckMat = new THREE.MeshStandardMaterial({ color: 0x78350F, roughness: 0.85 });
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(10, 0.4, 8), deckMat);
+  deck.position.y = 0.2;
+  deck.receiveShadow = true;
+  group.add(deck);
+
+  // 6 Wooden Stilt Support Poles
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x451A03, roughness: 0.9 });
+  const poleGeo = new THREE.CylinderGeometry(0.14, 0.16, 4.2, 8);
+  [-4.2, 0, 4.2].forEach((px) => {
+    [-3.2, 3.2].forEach((pz) => {
+      const pole = new THREE.Mesh(poleGeo, poleMat);
+      pole.position.set(px, 2.1, pz);
+      pole.castShadow = true;
+      group.add(pole);
+    });
+  });
+
+  // Conical Thatched Straw Palm Roof
+  const thatchMat = new THREE.MeshStandardMaterial({
+    color: 0xA16207, // Sun-dried golden palm straw
+    roughness: 0.95,
+  });
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(7.2, 3.2, 16), thatchMat);
+  roof.position.y = 5.2;
+  roof.castShadow = true;
+  group.add(roof);
+
+  // Wooden Bar Counter
+  const barMat = new THREE.MeshStandardMaterial({ color: 0x854D0E, roughness: 0.7 });
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(5.0, 1.1, 1.2), barMat);
+  bar.position.set(0, 0.75, 0.5);
+  bar.castShadow = true;
+  group.add(bar);
+
+  // Ganvié Beer Beach Signboard
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 256;
+  signCanvas.height = 64;
+  const ctx = signCanvas.getContext('2d')!;
+  ctx.fillStyle = '#15803D';
+  ctx.fillRect(0, 0, 256, 64);
+  ctx.fillStyle = '#FEF08A';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('PAILLOTE GANVIÉ PLAGE', 128, 22);
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('POISSON BRAISÉ • BIÈRE FRAÎCHE', 128, 44);
+
+  const signTex = new THREE.CanvasTexture(signCanvas);
+  signTex.colorSpace = THREE.SRGBColorSpace;
+  const sign = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.6, 0.9),
+    new THREE.MeshBasicMaterial({ map: signTex })
+  );
+  sign.position.set(0, 3.6, 3.4);
+  group.add(sign);
+
+  return group;
+}
+
+/**
+ * 19. Boulevard Street Light (Curved galvanized pole with downward luminaire)
+ */
+export function createStreetLight(): THREE.Group {
+  const group = new THREE.Group();
+
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.85, roughness: 0.3 });
+
+  // Vertical pole
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 7.5, 8), metalMat);
+  pole.position.y = 3.75;
+  pole.castShadow = true;
+  group.add(pole);
+
+  // Curved overhang arm
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.4, 8), metalMat);
+  arm.position.set(0.9, 7.4, 0);
+  arm.rotateZ(Math.PI / 3.2);
+  group.add(arm);
+
+  // Luminaire lamp head
+  const headMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.9 });
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.4), headMat);
+  head.position.set(1.9, 7.2, 0);
+  group.add(head);
+
+  // Glowing LED lens
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xFEF08A });
+  const bulb = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.3), bulbMat);
+  bulb.rotateX(Math.PI / 2);
+  bulb.position.set(1.9, 7.08, 0);
+  group.add(bulb);
+
+  // Downward warm street light
+  const light = new THREE.PointLight(0xFEF08A, 1.2, 16);
+  light.position.set(1.9, 6.8, 0);
+  group.add(light);
+
+  return group;
+}
+
+/**
+ * 20. Cotonou Asphalt Speed Bump ("Dos d'âne")
+ */
+export function createSpeedBumpMesh(length: number = 14): THREE.Group {
+  const group = new THREE.Group();
+
+  const bumpGeo = new THREE.CylinderGeometry(0.8, 0.8, length, 12, 1, false, 0, Math.PI);
+  bumpGeo.rotateZ(Math.PI / 2);
+  bumpGeo.scale(1, 0.22, 1);
+
+  // Yellow and black caution stripe canvas texture
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#1A1A1A';
+  ctx.fillRect(0, 0, 64, 64);
+  ctx.fillStyle = '#FACC15';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(32, 0);
+  ctx.lineTo(64, 64);
+  ctx.lineTo(32, 64);
+  ctx.closePath();
+  ctx.fill();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(length / 2, 1);
+  tex.colorSpace = THREE.SRGBColorSpace;
+
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8 });
+  const bump = new THREE.Mesh(bumpGeo, mat);
+  bump.position.y = 0.08;
+  group.add(bump);
+
+  return group;
+}
+
+/**
+ * 21. Cotonou District / Street Signpost
+ */
+export function createStreetSignPost(streetName: string, neighborhood: string): THREE.Group {
+  const group = new THREE.Group();
+
+  const postMat = new THREE.MeshStandardMaterial({ color: 0x64748B, metalness: 0.8, roughness: 0.3 });
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 3.2, 8), postMat);
+  post.position.y = 1.6;
+  group.add(post);
+
+  // Sign plate (Authentic Benin green with white border)
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#15803D'; // Green
+  ctx.fillRect(0, 0, 256, 64);
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(3, 3, 250, 58);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(streetName.toUpperCase(), 128, 22);
+
+  ctx.fillStyle = '#FEF08A';
+  ctx.font = '11px sans-serif';
+  ctx.fillText(neighborhood.toUpperCase(), 128, 44);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sign = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.6, 0.45),
+    new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
+  );
+  sign.position.set(0, 2.9, 0);
+  group.add(sign);
+
+  return group;
+}
+

@@ -8,6 +8,7 @@ import {
   applyCrimeWanted,
   worldToMinimapCoords,
   stepVehiclePhysics,
+  checkObstacleCollision,
   VEHICLE_CONFIGS,
 } from './rules.ts';
 import { COTONOU_TRAFFIC_PATHS } from './trafficSystem.ts';
@@ -72,6 +73,23 @@ test('stepVehiclePhysics accelerates and limits maxSpeed', () => {
   assert.equal(maxed.speed, config.maxSpeed);
 });
 
+test('checkObstacleCollision handles circle and AABB box obstacles without phantom street collisions', () => {
+  // Circular obstacle (e.g. pole at 0, 0, radius 2)
+  assert.equal(checkObstacleCollision(1, 0, 0.5, { type: 'circle', x: 0, z: 0, radius: 2 }), true);
+  assert.equal(checkObstacleCollision(5, 0, 0.5, { type: 'circle', x: 0, z: 0, radius: 2 }), false);
+
+  // Box obstacle (building at 50, 50, width 20, depth 20 => halfWidth=10, halfDepth=10)
+  // X bounds: [40, 60], Z bounds: [40, 60]
+  const building = { type: 'box' as const, x: 50, z: 50, halfWidth: 10, halfDepth: 10 };
+
+  // Touching or inside building
+  assert.equal(checkObstacleCollision(40.5, 50, 1.0, building), true);
+  // On the street right alongside the building (e.g. x = 38, player radius 1.0 => reaches 39, building starts at 40)
+  assert.equal(checkObstacleCollision(38.5, 50, 1.0, building), false);
+  // Far away
+  assert.equal(checkObstacleCollision(20, 50, 1.0, building), false);
+});
+
 test('COTONOU_TRAFFIC_PATHS contains valid waypoint loops', () => {
   assert.ok(COTONOU_TRAFFIC_PATHS.length >= 4);
   COTONOU_TRAFFIC_PATHS.forEach((path: any) => {
@@ -82,3 +100,4 @@ test('COTONOU_TRAFFIC_PATHS contains valid waypoint loops', () => {
     });
   });
 });
+

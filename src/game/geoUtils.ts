@@ -87,16 +87,23 @@ export const COTONOU_LANDMARKS: { id: string; name: string; lng: number; lat: nu
   {
     id: 'amazone',
     name: "Monument de l'Amazone",
-    lng: 2.4183,
+    lng: 2.4187,
     lat: 6.3728,
-    threePos: { x: 0, z: 140 }, // South/Southeast
+    threePos: { x: 40, z: 140 }, // Marina Esplanade
+  },
+  {
+    id: 'cathedrale',
+    name: 'Cathédrale Notre-Dame-de-Miséricorde',
+    lng: 2.4178,
+    lat: 6.3711,
+    threePos: { x: -52, z: 48 },
   },
   {
     id: 'dantokpa',
     name: 'Grand Marché Dantokpa',
     lng: 2.4203,
     lat: 6.3692,
-    threePos: { x: 110, z: -60 },
+    threePos: { x: 145, z: -60 },
   },
   {
     id: 'port_autonome',

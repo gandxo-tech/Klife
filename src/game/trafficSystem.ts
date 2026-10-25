@@ -31,55 +31,80 @@ export interface AIVehicle {
   targetLateralOffset: number;
 }
 
-// Cotonou Road Loops (Waypoints along main avenues)
+// Cotonou Road Loops (Waypoints realistically circumnavigating Place de l'Étoile Rouge roundabout)
 export const COTONOU_TRAFFIC_PATHS: Waypoint[][] = [
-  // Loop 1: Étoile Rouge -> Dantokpa -> Port -> Akpakpa -> Étoile Rouge
+  // Loop 1: Étoile Rouge Roundabout -> Dantokpa -> Nokoué Avenue -> Étoile Rouge
   [
-    { x: 3, z: 0 },
-    { x: 50, z: -3 },
-    { x: 105, z: -3 },
-    { x: 110, z: -30 },
-    { x: 140, z: -30 },
-    { x: 145, z: 20 },
-    { x: 100, z: 90 },
-    { x: 3, z: 90 },
-    { x: 3, z: 20 },
+    { x: 32, z: -4 },
+    { x: 96, z: -4 },
+    { x: 100, z: -30 },
+    { x: 100, z: -75 },
+    { x: 50, z: -90 },
+    { x: 4, z: -90 },
+    { x: 4, z: -32 },
+    // Roundabout arc (counter-clockwise)
+    { x: 15, z: -15 },
+    { x: 21, z: 0 },
   ],
-  // Loop 2: Reverse Étoile Rouge -> Fidjrossè -> Beach Avenue -> Étoile Rouge
+  // Loop 2: Étoile Rouge -> Fidjrossè -> Route des Pêches -> Beach Avenue -> Étoile Rouge
   [
-    { x: -3, z: 0 },
-    { x: -90, z: 3 },
-    { x: -180, z: 3 },
-    { x: -180, z: -90 },
-    { x: -90, z: -90 },
-    { x: -3, z: -90 },
-    { x: -3, z: -20 },
+    { x: -32, z: 4 },
+    { x: -96, z: 4 },
+    { x: -135, z: 4 },
+    { x: -135, z: -90 },
+    { x: -96, z: -90 },
+    { x: -4, z: -90 },
+    { x: -4, z: -32 },
+    // Roundabout arc
+    { x: -15, z: -15 },
+    { x: -21, z: 0 },
+    { x: -15, z: 15 },
   ],
-  // Loop 3: North-South Avenue (Cadjehoun -> Étoile Rouge -> Sikè)
+  // Loop 3: Avenue Jean-Paul II / Steinmetz (Cadjehoun -> Étoile Rouge -> Marina)
   [
-    { x: 3, z: -180 },
-    { x: 3, z: -90 },
-    { x: 3, z: -10 },
-    { x: 3, z: 80 },
-    { x: 3, z: 180 },
-    { x: -3, z: 180 },
-    { x: -3, z: 80 },
-    { x: -3, z: -10 },
-    { x: -3, z: -90 },
-    { x: -3, z: -180 },
+    { x: 4, z: -180 },
+    { x: 4, z: -90 },
+    { x: 4, z: -32 },
+    // Roundabout arc East side
+    { x: 18, z: -11 },
+    { x: 21, z: 0 },
+    { x: 18, z: 11 },
+    { x: 4, z: 32 },
+    { x: 4, z: 90 },
+    { x: 4, z: 180 },
+    // Return North
+    { x: -4, z: 180 },
+    { x: -4, z: 90 },
+    { x: -4, z: 32 },
+    // Roundabout arc West side
+    { x: -18, z: 11 },
+    { x: -21, z: 0 },
+    { x: -18, z: -11 },
+    { x: -4, z: -32 },
+    { x: -4, z: -90 },
   ],
-  // Loop 4: East-West Boulevard
+  // Loop 4: Boulevard de la Marina (East-West)
   [
-    { x: -180, z: 3 },
-    { x: -90, z: 3 },
-    { x: 0, z: 3 },
-    { x: 90, z: 3 },
-    { x: 180, z: 3 },
-    { x: 180, z: -3 },
-    { x: 90, z: -3 },
-    { x: 0, z: -3 },
-    { x: -90, z: -3 },
-    { x: -180, z: -3 },
+    { x: -180, z: 4 },
+    { x: -90, z: 4 },
+    { x: -32, z: 4 },
+    // Roundabout South arc
+    { x: -11, z: 18 },
+    { x: 0, z: 21 },
+    { x: 11, z: 18 },
+    { x: 32, z: 4 },
+    { x: 90, z: 4 },
+    { x: 180, z: 4 },
+    // Return West
+    { x: 180, z: -4 },
+    { x: 90, z: -4 },
+    { x: 32, z: -4 },
+    // Roundabout North arc
+    { x: 11, z: -18 },
+    { x: 0, z: -21 },
+    { x: -11, z: -18 },
+    { x: -32, z: -4 },
+    { x: -90, z: -4 },
   ],
 ];
 

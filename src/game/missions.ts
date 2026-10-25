@@ -24,9 +24,9 @@ export const MISSIONS: Mission[] = [
       },
       {
         instruction: 'Fonce au Grand Marché Dantokpa pour charger la marchandise',
-        targetX: 110,
+        targetX: 145,
         targetZ: -60,
-        targetRadius: 16,
+        targetRadius: 18,
       },
       {
         instruction: 'Livre le colis au dépôt secret d’Akpakpa !',
@@ -48,15 +48,15 @@ export const MISSIONS: Mission[] = [
     stages: [
       {
         instruction: 'Rends-toi devant le Monument majestueux de l’Amazone',
-        targetX: 0,
+        targetX: 40,
         targetZ: 140,
-        targetRadius: 20,
+        targetRadius: 22,
       },
       {
         instruction: 'Vole le SUV 4x4 noir garé sur l’Esplanade',
-        targetX: 8,
-        targetZ: 150,
-        targetRadius: 15,
+        targetX: 48,
+        targetZ: 146,
+        targetRadius: 16,
         requiresVehicleType: 'gwagon',
         spawnPoliceStars: 2,
       },

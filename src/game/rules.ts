@@ -252,6 +252,28 @@ export function stepVehiclePhysics(
 }
 
 /**
+ * Obstacle definitions supporting both Circular (poles, roundabouts) and Box (buildings, containers) colliders
+ */
+export interface CircleObstacle {
+  type?: 'circle';
+  x: number;
+  z: number;
+  radius: number;
+  height?: number;
+}
+
+export interface BoxObstacle {
+  type: 'box';
+  x: number;
+  z: number;
+  halfWidth: number;
+  halfDepth: number;
+  height?: number;
+}
+
+export type WorldObstacle = CircleObstacle | BoxObstacle;
+
+/**
  * Circular collision detection
  */
 export function checkCircleCollision(
@@ -267,3 +289,28 @@ export function checkCircleCollision(
   const minDist = r1 + r2;
   return dx * dx + dz * dz < minDist * minDist;
 }
+
+/**
+ * Robust obstacle collision detection (supports Circle-Circle and Circle-Box AABB tests)
+ */
+export function checkObstacleCollision(
+  px: number,
+  pz: number,
+  playerRadius: number,
+  obstacle: WorldObstacle
+): boolean {
+  if (obstacle.type === 'box') {
+    // Find closest point on AABB box to circle center
+    const closestX = Math.max(obstacle.x - obstacle.halfWidth, Math.min(px, obstacle.x + obstacle.halfWidth));
+    const closestZ = Math.max(obstacle.z - obstacle.halfDepth, Math.min(pz, obstacle.z + obstacle.halfDepth));
+    const dx = px - closestX;
+    const dz = pz - closestZ;
+    return dx * dx + dz * dz < playerRadius * playerRadius;
+  } else {
+    const dx = px - obstacle.x;
+    const dz = pz - obstacle.z;
+    const minDist = playerRadius + obstacle.radius;
+    return dx * dx + dz * dz < minDist * minDist;
+  }
+}
+
