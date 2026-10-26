@@ -13,8 +13,19 @@ import { PauseModal } from './components/PauseModal.tsx';
 import { HowToPlayModal } from './components/HowToPlayModal.tsx';
 import { GameResultModal } from './components/GameResultModal.tsx';
 import { OpenFreeMapModal } from './components/OpenFreeMapModal.tsx';
+import { GpsGoogleMapsModal } from './components/GpsGoogleMapsModal.tsx';
+import { PhoneModal } from './components/PhoneModal.tsx';
 import { CharacterCreatorModal, CharacterConfig } from './components/CharacterCreatorModal.tsx';
 import { GarageModal } from './components/GarageModal.tsx';
+import {
+  PlayerEconomyState,
+  createInitialEconomy,
+  updatePassiveDividends,
+  simulateMarketFluctuation,
+  EconomicJob,
+  applyArrestConfiscation,
+} from './game/economy.ts';
+import { Mission } from './game/types.ts';
 
 export default function App() {
   const canvasMountRef = useRef<HTMLDivElement | null>(null);
@@ -49,8 +60,13 @@ export default function App() {
   const [missionsModalOpen, setMissionsModalOpen] = useState(false);
   const [howToPlayOpen, setHowToPlayOpen] = useState(false);
   const [openFreeMapOpen, setOpenFreeMapOpen] = useState(false);
+  const [gpsGoogleMapsOpen, setGpsGoogleMapsOpen] = useState(false);
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [activeGarageModal, setActiveGarageModal] = useState<GarageLocation | null>(null);
   const [victoryData, setVictoryData] = useState<{ title: string; reward: number } | null>(null);
+
+  // Economy state
+  const [economy, setEconomy] = useState<PlayerEconomyState>(() => createInitialEconomy(50000));
 
   const triggerNotification = useCallback((text: string) => {
     setNotification(text);
@@ -61,19 +77,56 @@ export default function App() {
     setNotificationTimer(timer);
   }, [notificationTimer]);
 
+  const handleUpdateEconomy = useCallback((newEco: PlayerEconomyState) => {
+    setEconomy(newEco);
+    if (engineRef.current) {
+      engineRef.current.player.cashFCFA = newEco.cashFCFA;
+    }
+  }, []);
+
+  // Periodic passive dividends & commodities fluctuation
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+    const interval = setInterval(() => {
+      setEconomy((prev) => {
+        const withDivs = updatePassiveDividends(prev);
+        return simulateMarketFluctuation(withDivs);
+      });
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [gameState]);
+
   // Mount 3D Game Engine once
   useEffect(() => {
     if (!canvasMountRef.current) return;
 
     const engine = new GameEngine(canvasMountRef.current, {
-      onStatsUpdate: (stats) => setPlayerStats(stats),
+      onStatsUpdate: (stats) => {
+        setPlayerStats(stats);
+        setEconomy((prev) => {
+          if (prev.cashFCFA !== stats.cashFCFA) {
+            return { ...prev, cashFCFA: stats.cashFCFA };
+          }
+          return prev;
+        });
+      },
       onMissionUpdate: (mission) => setActiveMission(mission),
       onVehicleUpdate: (veh) => setActiveVehicle(veh),
       onNotification: (text) => triggerNotification(text),
       onOpenCharacterCreator: () => setCharacterCreatorOpen(true),
       onOpenGarageModal: (garage) => setActiveGarageModal(garage),
+      onOpenPhone: () => setPhoneModalOpen(true),
       onInteractionTip: (tip) => setInteractionTip(tip),
-      onGameOver: () => setGameState('gameover'),
+      onGameOver: () => {
+        setGameState('gameover');
+        setEconomy((prev) => {
+          const { state, lostCash } = applyArrestConfiscation(prev);
+          if (lostCash > 0) {
+            triggerNotification(`Arrestation : ${lostCash.toLocaleString('fr-FR')} FCFA saisis ! Vos fonds MoMo sont saufs.`);
+          }
+          return state;
+        });
+      },
       onVictory: (title, reward) => {
         setVictoryData({ title, reward });
         setGameState('victory');
@@ -102,7 +155,10 @@ export default function App() {
         });
       }
       if (e.key.toLowerCase() === 'm') {
-        setOpenFreeMapOpen((prev) => !prev);
+        setGpsGoogleMapsOpen((prev) => !prev);
+      }
+      if (e.key.toLowerCase() === 'p') {
+        setPhoneModalOpen((prev) => !prev);
       }
     };
 
@@ -177,6 +233,43 @@ export default function App() {
     }
   };
 
+  const handleStartEconomicJob = (job: EconomicJob) => {
+    if (engineRef.current) {
+      if (engineRef.current.isIndoorBedroom) {
+        engineRef.current.exitBedroomToCity();
+      }
+      const customMission: Mission = {
+        id: job.id,
+        title: job.title,
+        bossName: job.employer,
+        locationName: job.targetDistrict,
+        description: job.description,
+        audioPrompt: `${job.employer} : ${job.description}`,
+        rewardFCFA: job.rewardFCFA,
+        timeLimitSec: job.durationSec,
+        stages: [
+          {
+            instruction: `Rejoindre ${job.targetDistrict} a Cotonou`,
+            targetX: job.targetX,
+            targetZ: job.targetZ,
+            targetRadius: 18,
+            spawnPoliceStars: job.wantedStarsOnStart,
+          },
+        ],
+      };
+      engineRef.current.startCustomMission(customMission);
+      if (job.wantedStarsOnStart > 0) {
+        engineRef.current.player.wantedStars = Math.max(
+          engineRef.current.player.wantedStars,
+          job.wantedStarsOnStart
+        );
+      }
+      setPhoneModalOpen(false);
+      setGpsGoogleMapsOpen(false);
+      triggerNotification(`Mission lancee : ${job.title} (+${job.rewardFCFA.toLocaleString('fr-FR')} FCFA)`);
+    }
+  };
+
   return (
     <main
       className="relative w-screen h-screen overflow-hidden bg-slate-950 select-none"
@@ -203,6 +296,7 @@ export default function App() {
       {gameState === 'playing' && (
         <HUD
           player={playerStats}
+          bankMoMoFCFA={economy.bankMoMoFCFA}
           vehicles={engineRef.current ? (engineRef.current as any).vehicles || [] : []}
           trafficVehicles={engineRef.current ? engineRef.current.getTrafficVehicles() : []}
           activeVehicle={activeVehicle}
@@ -210,7 +304,9 @@ export default function App() {
           notification={notification}
           interactionTip={interactionTip}
           onOpenMissions={() => setMissionsModalOpen(true)}
-          onOpenMap={() => setOpenFreeMapOpen(true)}
+          onOpenMap={() => setGpsGoogleMapsOpen(true)}
+          onOpenGoogleMaps={() => setGpsGoogleMapsOpen(true)}
+          onOpenPhone={() => setPhoneModalOpen(true)}
           onOpenCustomizer={() => setCharacterCreatorOpen(true)}
           onOpenPause={() => {
             engineRef.current?.setGameState('paused');
@@ -308,7 +404,29 @@ export default function App() {
         />
       )}
 
-      {/* 10. Garage Tuning & Storage Workshop Modal */}
+      {/* 10. Google Maps Platform Satellite GPS Tablet Modal */}
+      {gpsGoogleMapsOpen && (
+        <GpsGoogleMapsModal
+          player={playerStats}
+          ownedPropertyIds={economy.ownedPropertyIds}
+          onClose={() => setGpsGoogleMapsOpen(false)}
+          onTeleport={(x, z) => engineRef.current?.teleportPlayer(x, z)}
+          onSetWaypoint={(x, z, name) => engineRef.current?.setCustomWaypoint(x, z, name)}
+        />
+      )}
+
+      {/* 11. Smartphone In-Game (Kobo Invest, MoMo Pay, Jobs & Heists) */}
+      {phoneModalOpen && (
+        <PhoneModal
+          economy={economy}
+          onUpdateEconomy={handleUpdateEconomy}
+          onStartJob={handleStartEconomicJob}
+          onClose={() => setPhoneModalOpen(false)}
+          onNotification={(msg) => triggerNotification(msg)}
+        />
+      )}
+
+      {/* 12. Garage Tuning & Storage Workshop Modal */}
       {activeGarageModal && (
         <GarageModal
           garage={activeGarageModal}

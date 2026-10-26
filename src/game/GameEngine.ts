@@ -17,6 +17,7 @@ import {
   ActiveVehicle,
   GameState,
   GarageLocation,
+  Mission,
   Pedestrian,
   PlayerStats,
   StoredVehicle,
@@ -85,8 +86,17 @@ export interface EngineCallbacks {
   onVictory: (missionTitle: string, reward: number) => void;
   onOpenCharacterCreator?: () => void;
   onOpenGarageModal?: (garage: GarageLocation) => void;
+  onOpenPhone?: () => void;
   onInteractionTip?: (tip: string | null) => void;
 }
+
+export const COTONOU_MOMO_KIOSKS = [
+  { name: 'Kiosque MoMo Sikè-Fictif', x: -42, z: -95, radius: 4.5, isArmoredVan: false },
+  { name: 'Kiosque MoMo Dantokpa Marché', x: 108, z: -48, radius: 4.5, isArmoredVan: false },
+  { name: 'Kiosque Moov Flooz Dantokpa', x: 108, z: -72, radius: 4.5, isArmoredVan: false },
+  { name: 'Kiosque MoMo Étoile Rouge', x: 22, z: -25, radius: 4.5, isArmoredVan: false },
+  { name: 'Fourgon Blindé Trésor Public', x: 55, z: 101, radius: 5.5, isArmoredVan: true },
+];
 
 export class GameEngine {
   private container: HTMLDivElement;
@@ -686,6 +696,17 @@ export class GameEngine {
         return;
       }
 
+      // Check MoMo Kiosks / Armored Van
+      for (const kiosk of COTONOU_MOMO_KIOSKS) {
+        const d = calculateDistance(this.player.x, this.player.z, kiosk.x, kiosk.z);
+        if (d < kiosk.radius) {
+          if (this.callbacks.onOpenPhone) {
+            this.callbacks.onOpenPhone();
+            return;
+          }
+        }
+      }
+
       this.toggleEnterVehicle();
     }
   }
@@ -694,6 +715,10 @@ export class GameEngine {
     const mission = MISSIONS.find((m) => m.id === missionId);
     if (!mission) return;
 
+    this.startCustomMission(mission);
+  }
+
+  public startCustomMission(mission: Mission) {
     this.activeMission = {
       mission,
       currentStageIndex: 0,
@@ -911,19 +936,31 @@ export class GameEngine {
       const isDriving = !!this.player.currentVehicleId;
       const currentVeh = this.vehicles.find((v) => v.id === this.player.currentVehicleId);
 
-      let garageTip: string | null = null;
+      let activeTip: string | null = null;
       for (const gar of GARAGE_LOCATIONS) {
         const d = calculateDistance(this.player.x, this.player.z, gar.x, gar.z + 10);
         if (d < gar.radius) {
-          garageTip = isDriving
+          activeTip = isDriving
             ? `🔧 ${gar.name} - Appuie sur [ACTION] pour customiser ou ranger`
             : `🔧 ${gar.name} - Appuie sur [ACTION] pour accéder à l'atelier`;
           break;
         }
       }
 
+      if (!activeTip) {
+        for (const kiosk of COTONOU_MOMO_KIOSKS) {
+          const d = calculateDistance(this.player.x, this.player.z, kiosk.x, kiosk.z);
+          if (d < kiosk.radius) {
+            activeTip = kiosk.isArmoredVan
+              ? `💰 ${kiosk.name} - Touche E ou P pour braquer (300 000 FCFA)`
+              : `📱 ${kiosk.name} - Touche E pour ouvrir MoMo Pay`;
+            break;
+          }
+        }
+      }
+
       if (this.callbacks.onInteractionTip) {
-        this.callbacks.onInteractionTip(garageTip);
+        this.callbacks.onInteractionTip(activeTip);
       }
 
       if (isDriving && currentVeh) {

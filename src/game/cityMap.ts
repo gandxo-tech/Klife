@@ -28,6 +28,10 @@ import {
   createStreetLight,
   createSpeedBumpMesh,
   createStreetSignPost,
+  createMinistryOfFinanceMesh,
+  createArmoredCashVanMesh,
+  createWholesaleMarketShedMesh,
+  createBeachLoungerSetMesh,
 } from './models.ts';
 import { GARAGE_LOCATIONS } from './garages.ts';
 import {
@@ -683,8 +687,107 @@ export function buildCotonouCity(scene: THREE.Scene): CityBuildResult {
     const sign = createStreetSignPost(s.street, s.district);
     sign.position.set(s.x, 0, s.z);
     scene.add(sign);
-    obstacles.push({ type: 'circle', x: s.x, z: s.z, radius: 0.6 });
   });
+
+  // ==========================================
+  // 12. LANDMARK 7: QUARTIER ADMINISTRATIF & MINISTÈRE DES FINANCES
+  // Neoclassical ministry complex with marble colonnade, official courtyard,
+  // security gatehouse, and Armored Cash Transport Van (Target of Heists!)
+  // Located at x = 55, z = 85
+  // ==========================================
+  const ministry = createMinistryOfFinanceMesh();
+  ministry.position.set(55, 0, 85);
+  scene.add(ministry);
+
+  // Ministry main building obstacle
+  obstacles.push({
+    type: 'box',
+    x: 55,
+    z: 85,
+    halfWidth: 17.5,
+    halfDepth: 11.5,
+    height: 15,
+  });
+
+  // Ministry Gatehouse & Security barrier
+  obstacles.push({
+    type: 'box',
+    x: 71,
+    z: 103,
+    halfWidth: 2.0,
+    halfDepth: 2.0,
+    height: 3.5,
+  });
+
+  // Armored Cash Transport Van stationed in ministry courtyard (x = 55, z = 101)
+  const armoredVan = createArmoredCashVanMesh();
+  armoredVan.position.set(55, 0, 101);
+  armoredVan.rotation.y = -Math.PI / 2;
+  scene.add(armoredVan);
+  obstacles.push({
+    type: 'box',
+    x: 55,
+    z: 101,
+    halfWidth: 3.4,
+    halfDepth: 1.8,
+    height: 2.8,
+  });
+
+  // Ceremonial Benin Tricolor Flagpoles at Ministry front
+  [-8, 8].forEach((fx) => {
+    const flag = createBeninFlagpole();
+    flag.position.set(55 + fx, 0, 102);
+    scene.add(flag);
+    obstacles.push({ type: 'circle', x: 55 + fx, z: 102, radius: 0.8 });
+  });
+
+  // ==========================================
+  // 13. DANTOKPA EXPANSION: WHOLESALE SHEDS & STORAGE
+  // Located at x = 158, z = -78
+  // ==========================================
+  const wholesaleShed = createWholesaleMarketShedMesh();
+  wholesaleShed.position.set(158, 0, -78);
+  scene.add(wholesaleShed);
+  obstacles.push({
+    type: 'box',
+    x: 158,
+    z: -78,
+    halfWidth: 4.5,
+    halfDepth: 3.5,
+    height: 5.5,
+  });
+
+  // ==========================================
+  // 14. FIDJROSSÈ PLAGE EXPANSION: LOUNGERS & SURFBOARDS
+  // Along the golden sand coast
+  // ==========================================
+  [-50, 15].forEach((lz) => {
+    const loungerSet = createBeachLoungerSetMesh();
+    loungerSet.position.set(-175, 0.05, lz);
+    loungerSet.rotation.y = Math.PI / 2;
+    scene.add(loungerSet);
+    obstacles.push({
+      type: 'box',
+      x: -175,
+      z: lz,
+      halfWidth: 2.5,
+      halfDepth: 2.5,
+      height: 3.2,
+    });
+  });
+
+  // ==========================================
+  // 15. INTERACTIVE MOMO & MOOV KIOSKS (SIKÈ & ÉTOILE)
+  // ==========================================
+  const momoSike = createMoMoKiosk('mtn');
+  momoSike.position.set(-42, 0, -95);
+  scene.add(momoSike);
+  obstacles.push({ type: 'box', x: -42, z: -95, halfWidth: 1.3, halfDepth: 1.3, height: 2.8 });
+
+  const moovEtoile = createMoMoKiosk('moov');
+  moovEtoile.position.set(22, 0, -25);
+  scene.add(moovEtoile);
+  obstacles.push({ type: 'box', x: 22, z: -25, halfWidth: 1.3, halfDepth: 1.3, height: 2.8 });
 
   return { obstacles, waterMesh: water };
 }

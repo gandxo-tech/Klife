@@ -30,10 +30,12 @@ import {
   X,
   Maximize2,
   Minimize2,
+  Smartphone,
 } from 'lucide-react';
 
 interface HUDProps {
   player: PlayerStats;
+  bankMoMoFCFA?: number;
   vehicles: ActiveVehicle[];
   trafficVehicles?: { x: number; z: number; type: string }[];
   activeVehicle: ActiveVehicle | null;
@@ -42,6 +44,8 @@ interface HUDProps {
   interactionTip?: string | null;
   onOpenMissions: () => void;
   onOpenMap: () => void;
+  onOpenGoogleMaps?: () => void;
+  onOpenPhone?: () => void;
   onOpenPause: () => void;
   onOpenCustomizer?: () => void;
   onEnterExitVehicle: () => void;
@@ -54,6 +58,7 @@ interface HUDProps {
 
 export const HUD: React.FC<HUDProps> = ({
   player,
+  bankMoMoFCFA,
   vehicles,
   trafficVehicles = [],
   activeVehicle,
@@ -62,6 +67,8 @@ export const HUD: React.FC<HUDProps> = ({
   interactionTip,
   onOpenMissions,
   onOpenMap,
+  onOpenGoogleMaps,
+  onOpenPhone,
   onOpenPause,
   onOpenCustomizer,
   onEnterExitVehicle,
@@ -139,13 +146,24 @@ export const HUD: React.FC<HUDProps> = ({
         {/* Compact Quick Action Bar */}
         <div className="flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-md border border-slate-700/80 rounded-xl px-2 py-1 shadow-lg">
           <button
-            onClick={onOpenMap}
-            className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-sky-600 to-blue-600 active:from-sky-700 active:to-blue-700 hover:brightness-110 text-white font-bold text-[11px] rounded-lg transition shadow"
-            title="Carte GPS OpenFreeMap Cotonou (Touche M)"
+            onClick={onOpenGoogleMaps || onOpenMap}
+            className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-sky-600 to-blue-600 active:from-sky-700 active:to-blue-700 hover:brightness-110 text-white font-bold text-[11px] rounded-lg transition shadow"
+            title="Tablette GPS Google Maps Satellite (Touche M)"
           >
             <Compass className="w-3.5 h-3.5" />
-            <span>GPS</span>
+            <span>GPS Maps</span>
           </button>
+
+          {onOpenPhone && (
+            <button
+              onClick={onOpenPhone}
+              className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 active:from-emerald-700 active:to-teal-700 hover:brightness-110 text-white font-bold text-[11px] rounded-lg transition shadow"
+              title="Smartphone Kobo Invest & MoMo (Touche P)"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Kobo</span>
+            </button>
+          )}
 
           <button
             onClick={onOpenMissions}
@@ -200,11 +218,22 @@ export const HUD: React.FC<HUDProps> = ({
       {/* 3. TOP-RIGHT: Clean Cash, Wanted Stars, Health & Armor */}
       <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5 pointer-events-auto z-20">
         <div className="flex items-center gap-2">
-          {/* FCFA Cash */}
-          <div className="bg-slate-950/90 backdrop-blur-md border border-emerald-500/60 rounded-xl px-3 py-1 shadow-xl">
-            <span className="text-emerald-400 text-sm md:text-base font-black tracking-wider font-mono tabular-nums">
-              {formatFCFA(player.cashFCFA)}
-            </span>
+          {/* FCFA Cash & MoMo */}
+          <div className="bg-slate-950/90 backdrop-blur-md border border-emerald-500/60 rounded-xl px-3 py-1 shadow-xl flex items-center gap-2">
+            <div>
+              <span className="text-[9px] uppercase font-bold text-slate-400 block -mb-1">Espèces</span>
+              <span className="text-emerald-400 text-sm md:text-base font-black tracking-wider font-mono tabular-nums">
+                {formatFCFA(player.cashFCFA)}
+              </span>
+            </div>
+            {bankMoMoFCFA !== undefined && (
+              <div className="border-l border-slate-700/80 pl-2">
+                <span className="text-[9px] uppercase font-bold text-amber-400 block -mb-1">MoMo</span>
+                <span className="text-amber-400 text-xs md:text-sm font-black font-mono tabular-nums">
+                  {formatFCFA(bankMoMoFCFA)}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Pause Button */}

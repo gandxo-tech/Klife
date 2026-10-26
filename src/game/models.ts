@@ -2063,3 +2063,325 @@ export function createStreetSignPost(streetName: string, neighborhood: string): 
   return group;
 }
 
+/**
+ * 22. Ministère de l'Économie et des Finances (Quartier Administratif / Marina)
+ * Grand administrative neoclassical building with marble colonnade, pediment,
+ * security gatehouse, and national insignia.
+ */
+export function createMinistryOfFinanceMesh(): THREE.Group {
+  const group = new THREE.Group();
+
+  // Main Neoclassical Ministry Structure
+  const marbleMat = new THREE.MeshStandardMaterial({
+    color: 0xF8FAFC,
+    roughness: 0.35,
+    metalness: 0.1,
+  });
+  const mainBlock = new THREE.Mesh(new THREE.BoxGeometry(34, 14, 22), marbleMat);
+  mainBlock.position.y = 7;
+  mainBlock.castShadow = true;
+  mainBlock.receiveShadow = true;
+  group.add(mainBlock);
+
+  // Ground Plaza Podium with Steps
+  const podiumMat = new THREE.MeshStandardMaterial({ color: 0x94A3B8, roughness: 0.8 });
+  const podium = new THREE.Mesh(new THREE.BoxGeometry(38, 0.8, 28), podiumMat);
+  podium.position.set(0, 0.4, 2);
+  podium.receiveShadow = true;
+  group.add(podium);
+
+  // Grand Front Colonnade (6 Corinthian-inspired tall columns)
+  const colMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.25 });
+  const colGeo = new THREE.CylinderGeometry(0.55, 0.65, 11, 16);
+  for (let c = -14; c <= 14; c += 5.6) {
+    const col = new THREE.Mesh(colGeo, colMat);
+    col.position.set(c, 6.2, 12);
+    col.castShadow = true;
+    group.add(col);
+  }
+
+  // Front Pediment / Portico Roof
+  const porticoMat = new THREE.MeshStandardMaterial({ color: 0xE2E8F0, roughness: 0.4 });
+  const porticoSlab = new THREE.Mesh(new THREE.BoxGeometry(35, 1.2, 5), porticoMat);
+  porticoSlab.position.set(0, 12.3, 12);
+  porticoSlab.castShadow = true;
+  group.add(porticoSlab);
+
+  // Pediment Triangular Arch
+  const triangleGeo = new THREE.ConeGeometry(18, 4.0, 4);
+  triangleGeo.rotateY(Math.PI / 4);
+  const pediment = new THREE.Mesh(triangleGeo, porticoMat);
+  pediment.position.set(0, 14.8, 11.5);
+  pediment.castShadow = true;
+  group.add(pediment);
+
+  // Ministry Official Front Sign Canvas
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 512;
+  signCanvas.height = 128;
+  const ctx = signCanvas.getContext('2d')!;
+  ctx.fillStyle = '#064E3B'; // Forest Green
+  ctx.fillRect(0, 0, 512, 128);
+  ctx.strokeStyle = '#FACC15';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(6, 6, 500, 116);
+
+  ctx.fillStyle = '#FACC15';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('RÉPUBLIQUE DU BÉNIN', 256, 38);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'black 26px sans-serif';
+  ctx.fillText("MINISTÈRE DE L'ÉCONOMIE ET DES FINANCES", 256, 76);
+
+  ctx.fillStyle = '#CBD5E1';
+  ctx.font = 'italic 16px sans-serif';
+  ctx.fillText('Direction Générale du Trésor et de la Comptabilité Publique', 256, 106);
+
+  const signTex = new THREE.CanvasTexture(signCanvas);
+  signTex.colorSpace = THREE.SRGBColorSpace;
+  const signMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(16, 4.0),
+    new THREE.MeshBasicMaterial({ map: signTex })
+  );
+  signMesh.position.set(0, 9.5, 11.05);
+  group.add(signMesh);
+
+  // Tinted reflective office windows on sides and rear
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x0284C7,
+    roughness: 0.1,
+    metalness: 0.9,
+    transparent: true,
+    opacity: 0.85,
+  });
+  for (let f = 3.5; f <= 11; f += 3.8) {
+    for (let x = -13; x <= 13; x += 4.5) {
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.0), glassMat);
+      win.position.set(x, f, 11.05);
+      group.add(win);
+    }
+  }
+
+  // Security Gatehouse (Poste de garde militaire / police républicaine)
+  const boothMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.5 });
+  const gatehouse = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.8, 3.6), boothMat);
+  gatehouse.position.set(16, 1.8, 18);
+  gatehouse.castShadow = true;
+  group.add(gatehouse);
+
+  // Security Barrier Arm (Barrière levante rayée rouge/blanc)
+  const barrierMat = new THREE.MeshBasicMaterial({ color: 0xDC2626 });
+  const barrier = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.12, 0.12), barrierMat);
+  barrier.position.set(10.5, 1.2, 18);
+  group.add(barrier);
+
+  return group;
+}
+
+/**
+ * 23. Armored Cash Transport Van ("Fourgon Blindé Kobo Cash / Trésor")
+ * Heavy security vehicle with reinforced steel armour, bulletproof slit windows,
+ * roof turret sirens, and steel bullbar.
+ */
+export function createArmoredCashVanMesh(): THREE.Group {
+  const group = new THREE.Group();
+
+  // Heavy steel body
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: 0x1E293B, // Matte Tactical Navy/Black
+    metalness: 0.7,
+    roughness: 0.35,
+  });
+  const mainHull = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.2, 6.2), bodyMat);
+  mainHull.position.y = 1.5;
+  mainHull.castShadow = true;
+  group.add(mainHull);
+
+  // Front sloped cabin hood
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(2.7, 1.2, 1.6), bodyMat);
+  hood.position.set(0, 1.1, 3.4);
+  hood.castShadow = true;
+  group.add(hood);
+
+  // Slit bulletproof windshield
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x38BDF8,
+    metalness: 0.95,
+    roughness: 0.05,
+  });
+  const windshield = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.45, 0.1), glassMat);
+  windshield.position.set(0, 1.95, 2.7);
+  group.add(windshield);
+
+  // Reinforced front steel bullbar
+  const barMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.9, roughness: 0.2 });
+  const bullbar = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.8, 0.3), barMat);
+  bullbar.position.set(0, 0.8, 4.3);
+  group.add(bullbar);
+
+  // Side Livery: "TRANSPORT DE FONDS // KOBO CASH"
+  const liveryCanvas = document.createElement('canvas');
+  liveryCanvas.width = 256;
+  liveryCanvas.height = 64;
+  const ctx = liveryCanvas.getContext('2d')!;
+  ctx.fillStyle = '#064E3B'; // Emerald Green
+  ctx.fillRect(0, 0, 256, 64);
+  ctx.fillStyle = '#FACC15';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('TRANSPORT DE FONDS', 128, 24);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'black 18px sans-serif';
+  ctx.fillText('KOBO CASH • TRÉSOR', 128, 48);
+
+  const livTex = new THREE.CanvasTexture(liveryCanvas);
+  livTex.colorSpace = THREE.SRGBColorSpace;
+  const livMeshL = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.2, 0.8),
+    new THREE.MeshBasicMaterial({ map: livTex })
+  );
+  livMeshL.position.set(-1.42, 1.6, 0.5);
+  livMeshL.rotateY(-Math.PI / 2);
+  group.add(livMeshL);
+
+  const livMeshR = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.2, 0.8),
+    new THREE.MeshBasicMaterial({ map: livTex })
+  );
+  livMeshR.position.set(1.42, 1.6, 0.5);
+  livMeshR.rotateY(Math.PI / 2);
+  group.add(livMeshR);
+
+  // Emergency flashing beacons on roof
+  const sirenMat = new THREE.MeshBasicMaterial({ color: 0xEF4444 });
+  const siren1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.15, 8), sirenMat);
+  siren1.position.set(-0.7, 2.7, 2.2);
+  const siren2 = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, 0.15, 8),
+    new THREE.MeshBasicMaterial({ color: 0x3B82F6 })
+  );
+  siren2.position.set(0.7, 2.7, 2.2);
+  group.add(siren1, siren2);
+
+  // 4 Heavy armored wheels
+  const tireMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+  const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.45, 16);
+  wheelGeo.rotateZ(Math.PI / 2);
+  [
+    [-1.4, 0.55, 2.0],
+    [1.4, 0.55, 2.0],
+    [-1.4, 0.55, -1.8],
+    [1.4, 0.55, -1.8],
+  ].forEach(([wx, wy, wz]) => {
+    const wheel = new THREE.Mesh(wheelGeo, tireMat);
+    wheel.position.set(wx, wy, wz);
+    wheel.castShadow = true;
+    group.add(wheel);
+  });
+
+  return group;
+}
+
+/**
+ * 24. Wholesale Market Shed & Pallet Storage (Dantokpa Expansion)
+ */
+export function createWholesaleMarketShedMesh(): THREE.Group {
+  const group = new THREE.Group();
+
+  // Open timber shed frame
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x5C2605, roughness: 0.8 });
+  const postGeo = new THREE.CylinderGeometry(0.15, 0.18, 4.5, 6);
+  [
+    [-4, 2.25, -3],
+    [4, 2.25, -3],
+    [-4, 2.25, 3],
+    [4, 2.25, 3],
+  ].forEach(([x, y, z]) => {
+    const post = new THREE.Mesh(postGeo, woodMat);
+    post.position.set(x, y, z);
+    post.castShadow = true;
+    group.add(post);
+  });
+
+  // Corrugated zinc gabled roof
+  const roofMat = new THREE.MeshStandardMaterial({
+    color: 0x64748B,
+    metalness: 0.8,
+    roughness: 0.35,
+    side: THREE.DoubleSide,
+  });
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(6.5, 2.2, 4), roofMat);
+  roof.rotateY(Math.PI / 4);
+  roof.position.y = 5.2;
+  roof.castShadow = true;
+  group.add(roof);
+
+  // Stacks of burlap grain and spice sacks (Sacs de maïs, igname, piment)
+  const sackMat = new THREE.MeshStandardMaterial({ color: 0xD97706, roughness: 0.9 });
+  for (let sx = -2.5; sx <= 2.5; sx += 1.4) {
+    for (let sz = -1.5; sz <= 1.5; sz += 1.4) {
+      const sack1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.5, 0.8), sackMat);
+      sack1.position.set(sx, 0.25, sz);
+      sack1.castShadow = true;
+      const sack2 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.45, 0.7), sackMat);
+      sack2.position.set(sx + 0.1, 0.7, sz - 0.05);
+      sack2.rotation.y = 0.2;
+      sack2.castShadow = true;
+      group.add(sack1, sack2);
+    }
+  }
+
+  return group;
+}
+
+/**
+ * 25. Beach Lounger Set & Surfboards (Fidjrossè Plage Expansion)
+ */
+export function createBeachLoungerSetMesh(): THREE.Group {
+  const group = new THREE.Group();
+
+  // Straw Parasol (Parasol en chaume de palmier)
+  const thatchMat = new THREE.MeshStandardMaterial({ color: 0xA16207, roughness: 0.9, side: THREE.DoubleSide });
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x451A03, roughness: 0.7 });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.2, 8), poleMat);
+  pole.position.y = 1.6;
+  group.add(pole);
+
+  const umbrella = new THREE.Mesh(new THREE.ConeGeometry(2.4, 0.9, 12), thatchMat);
+  umbrella.position.y = 3.1;
+  umbrella.castShadow = true;
+  group.add(umbrella);
+
+  // 2 Wooden Sun Loungers with colorful Wax cushions
+  const loungerMat = new THREE.MeshStandardMaterial({ color: 0x78350F, roughness: 0.6 });
+  const cushionMat = new THREE.MeshStandardMaterial({ color: 0xE11D48, roughness: 0.7 });
+
+  [-1.2, 1.2].forEach((lx) => {
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 2.2), loungerMat);
+    frame.position.set(lx, 0.2, 0);
+    frame.castShadow = true;
+
+    const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.1, 2.0), cushionMat);
+    cushion.position.set(lx, 0.35, 0);
+    group.add(frame, cushion);
+
+    // Reclined backrest
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.1, 0.8), cushionMat);
+    back.position.set(lx, 0.6, -0.6);
+    back.rotation.x = -0.4;
+    group.add(back);
+  });
+
+  // Upright Surfboard stuck in the sand
+  const boardMat = new THREE.MeshStandardMaterial({ color: 0x0284C7, metalness: 0.3, roughness: 0.2 });
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.45, 2.2, 0.08), boardMat);
+  board.position.set(2.4, 0.9, 0.5);
+  board.rotation.z = -0.15;
+  board.castShadow = true;
+  group.add(board);
+
+  return group;
+}
+

@@ -73,16 +73,26 @@ export function geoToThree(lng: number, lat: number): ThreeCoordinate {
   return { x, z };
 }
 
+export interface CotonouLandmark {
+  id: string;
+  name: string;
+  lng: number;
+  lat: number;
+  threePos: ThreeCoordinate;
+  description?: string;
+}
+
 /**
  * Pre-configured Cotonou Landmarks with accurate GPS and projected Three.js coordinates
  */
-export const COTONOU_LANDMARKS: { id: string; name: string; lng: number; lat: number; threePos: ThreeCoordinate }[] = [
+export const COTONOU_LANDMARKS: CotonouLandmark[] = [
   {
     id: 'etoile_rouge',
     name: "Place de l'Étoile Rouge",
     lng: 2.4183,
     lat: 6.3703,
     threePos: { x: 0, z: 0 },
+    description: 'Rond-point révolutionnaire central avec obélisque et étoile rouge géante.',
   },
   {
     id: 'amazone',
@@ -90,6 +100,15 @@ export const COTONOU_LANDMARKS: { id: string; name: string; lng: number; lat: nu
     lng: 2.4187,
     lat: 6.3728,
     threePos: { x: 40, z: 140 }, // Marina Esplanade
+    description: 'Statue de 30 mètres en bronze célébrant les guerrières Agoodjié du Dahomey.',
+  },
+  {
+    id: 'quartier_admin',
+    name: 'Quartier Administratif (Ministère des Finances)',
+    lng: 2.4192,
+    lat: 6.3718,
+    threePos: { x: 55, z: 85 },
+    description: 'Cœur administratif du Bénin avec convoi de transport de fonds blindé.',
   },
   {
     id: 'cathedrale',
@@ -97,6 +116,7 @@ export const COTONOU_LANDMARKS: { id: string; name: string; lng: number; lat: nu
     lng: 2.4178,
     lat: 6.3711,
     threePos: { x: -52, z: 48 },
+    description: 'Édifice religieux historique aux bandes céramiques rouges et blanches.',
   },
   {
     id: 'dantokpa',
@@ -104,6 +124,7 @@ export const COTONOU_LANDMARKS: { id: string; name: string; lng: number; lat: nu
     lng: 2.4203,
     lat: 6.3692,
     threePos: { x: 145, z: -60 },
+    description: 'Le plus grand marché d’Afrique de l’Ouest au bord de la lagune de Nokoué.',
   },
   {
     id: 'port_autonome',
@@ -111,13 +132,15 @@ export const COTONOU_LANDMARKS: { id: string; name: string; lng: number; lat: nu
     lng: 2.4209,
     lat: 6.3712,
     threePos: { x: 145, z: 50 },
+    description: 'Poumon économique maritime avec milliers de conteneurs empilés.',
   },
   {
     id: 'fidjrosse_plage',
-    name: 'Fidjrossè Plage & Marina',
+    name: 'Fidjrossè Plage & Route des Pêches',
     lng: 2.4158,
     lat: 6.3725,
     threePos: { x: -140, z: 120 },
+    description: 'Bord de l’Océan Atlantique, paillotes sous les cocotiers et poissons braisés.',
   },
   {
     id: 'haie_vive',
@@ -125,6 +148,7 @@ export const COTONOU_LANDMARKS: { id: string; name: string; lng: number; lat: nu
     lng: 2.4196,
     lat: 6.3718,
     threePos: { x: 75, z: 85 },
+    description: 'Zone résidentielle chic avec ambassades, bars lounge et maquis animés.',
   },
 ];
 
